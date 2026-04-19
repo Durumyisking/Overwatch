@@ -1,7 +1,6 @@
 #include "OWPlayerState.h"
 
 #include "AbilitySystem/OWAbilitySystemComponent.h"
-#include "Abilities/GameplayAbilityTypes.h"
 #include "AbilitySystem/OWAbilitySet.h"
 #include "Data/OWHeroData.h"
 
@@ -20,28 +19,42 @@ void AOWPlayerState::PostInitializeComponents()
 		return;
 	}
 
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}
 
-	// 처음 InitAbilityActorInfo를 호출 당시 OwnerActor와 AvatarActor는 모두 같은 액터(PlayerState)를 가리키고 있다.
-	// OwnerActor는 액터의 소유자를 나타내며, AvatarActor는 액터가 실제로 행동하는 캐릭터를 나타낸다.
-	// 이를 위해 아래처럼 세팅한다.
-	if (FGameplayAbilityActorInfo* ActorInfo = AbilitySystemComponent->AbilityActorInfo.Get())
-	{
-		check(ActorInfo->OwnerActor == this);
-		check(ActorInfo->OwnerActor == ActorInfo->AvatarActor);
-
-		AbilitySystemComponent->InitAbilityActorInfo(this, GetPawn());
-	}
+UOWAbilitySystemComponent* AOWPlayerState::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void AOWPlayerState::SetHeroData(const FOWHeroData* InHeroData)
 {
+	if (!AbilitySystemComponent)
+	{
+		return;
+	}
+
 	if (!InHeroData)
 	{
 		return;
 	}
-	
-	if (UOWAbilitySet* AbilitySet = InHeroData->AbilitySet)
+
+	UOWAbilitySet* NewAbilitySet = InHeroData->AbilitySet;
+	if (AppliedAbilitySet == NewAbilitySet)
 	{
-		//AbilitySet->
+		return;
+	}
+
+	if (AppliedAbilitySet)
+	{
+		GrantedAbilityHandles.TakeFromAbilitySystem(AbilitySystemComponent);
+		GrantedAbilityHandles = FOWAbilitySet_GrantedHandles();
+		AppliedAbilitySet = nullptr;
+	}
+
+	if (NewAbilitySet)
+	{
+		NewAbilitySet->GiveAbilitySystem(AbilitySystemComponent, &GrantedAbilityHandles);
+		AppliedAbilitySet = NewAbilitySet;
 	}
 }

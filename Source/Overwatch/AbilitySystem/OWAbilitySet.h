@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "AbilitySystemComponent.h"
+#include "OWAbilitySet.generated.h"
 
 /*
  * GA의 WrapperClass 
@@ -33,12 +34,16 @@ struct FOWAbilitySet_GameplayAbility
 
 
 USTRUCT(BlueprintType)
-struct FOWAbilitySet_GrandtedHandles
+struct FOWAbilitySet_GrantedHandles
 {
 	GENERATED_BODY()
 	
 	void AddAbilitySpecHandle(const FGameplayAbilitySpecHandle& Handle);
 	void TakeFromAbilitySystem(UOWAbilitySystemComponent* InASC) const;
+
+	// 허용된 GameplayAbilitySpecHandle (int32)
+	UPROPERTY()
+	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 };
 UCLASS()
 class OVERWATCH_API UOWAbilitySet : public UPrimaryDataAsset
@@ -50,5 +55,5 @@ class OVERWATCH_API UOWAbilitySet : public UPrimaryDataAsset
 	TArray<FOWAbilitySet_GameplayAbility> Abilities;
 
 public:
-	void GiveAbilitySystem(UOWAbilitySystemComponent* AbilitySystemComponent, FOWAbilitySet_GrandtedHandles* OutGrantedHandles, UObject* SourceObject) const;
+	void GiveAbilitySystem(UOWAbilitySystemComponent* InASC, FOWAbilitySet_GrantedHandles* OutGrantedHandles, UObject* SourceObject = nullptr) const;
 };

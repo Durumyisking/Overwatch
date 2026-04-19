@@ -11,7 +11,6 @@
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
-class UInputAction;
 class UOWInputComponent;
 class UOWInputConfig;
 struct FInputActionValue;
@@ -43,56 +42,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UOWInputConfig> InputConfig;
-
-	// Legacy fallback until character assets are migrated to UOWInputConfig.
-	/** Crouch Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* CrouchAction;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* MoveAction;
-
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	class UInputAction* LookAction;
-
-	/** Mouse Look Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	class UInputAction* MouseLookAction;
-
-	/** Shoot Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* ShootAction;
-
-	/** Reload Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* ReloadAction;
-
-	/** Skill1 Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* Skill1Action;
-
-	/** Skill2 Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* Skill2Action;
-
-	/** Skill3 Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* Skill3Action;
-
-	/** Ultimate Input Action */
-	UPROPERTY(EditAnywhere, Category ="Input|Legacy")
-	UInputAction* UltimateAction;
 	
 public:
 	AOWCharacterBase();
 
 protected:
+	virtual void PossessedBy(AController* InNewController) override;
+	virtual void OnRep_PlayerState() override;
 
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
@@ -150,8 +106,6 @@ protected:
 
 protected:
 	void BindTaggedInputActions(UOWInputComponent* InInputComponent);
-	void BindLegacyInputActions(class UEnhancedInputComponent* InInputComponent);
-	void HandleAbilityInputPressed(FGameplayTag InInputTag);
 
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;

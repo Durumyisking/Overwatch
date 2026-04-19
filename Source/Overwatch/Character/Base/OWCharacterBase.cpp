@@ -5,9 +5,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "EnhancedInputComponent.h"
+#include "Data/OWHeroData.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Player/OWPlayerState.h"
+#include "AbilitySystem/OWAbilitySystemComponent.h"
 #include "Core/Types/OWGameplayTags.h"
 #include "Input/OWInputComponent.h"
 #include "Input/OWInputConfig.h"
@@ -54,29 +56,60 @@ AOWCharacterBase::AOWCharacterBase()
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 }
 
+void AOWCharacterBase::PossessedBy(AController* InNewController)
+{
+	Super::PossessedBy(InNewController);
+
+	AOWPlayerState* OWPlayerState = GetPlayerState<AOWPlayerState>();
+	if (!OWPlayerState)
+	{
+		return;
+	}
+
+	if (UOWAbilitySystemComponent* AbilitySystemComponent = OWPlayerState->GetAbilitySystemComponent())
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(OWPlayerState, this);
+	}
+
+	if (HasAuthority())
+	{
+		const FOWHeroData* HeroData = HeroDataRowHandle.GetRow<FOWHeroData>(TEXT("AOWCharacterBase::PossessedBy"));
+		OWPlayerState->SetHeroData(HeroData);
+	}
+}
+
+void AOWCharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AOWPlayerState* OWPlayerState = GetPlayerState<AOWPlayerState>();
+	if (!OWPlayerState)
+	{
+		return;
+	}
+
+	if (UOWAbilitySystemComponent* AbilitySystemComponent = OWPlayerState->GetAbilitySystemComponent())
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(OWPlayerState, this);
+	}
+}
+
 void AOWCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	if (UOWInputComponent* OWInputComponent = Cast<UOWInputComponent>(PlayerInputComponent))
+	UOWInputComponent* OWInputComponent = Cast<UOWInputComponent>(PlayerInputComponent);
+	if (!OWInputComponent)
 	{
-		if (InputConfig)
-		{
-			BindTaggedInputActions(OWInputComponent);
-			return;
-		}
-
-		OW_ACTOR_LOG(LogOWGame, Warning, this, "InputConfig is not set. Falling back to legacy direct InputAction bindings.");
-		BindLegacyInputActions(OWInputComponent);
+		UE_LOG(LogOWGame, Error, TEXT("'%s' Failed to find a UOWInputComponent."), *GetNameSafe(this));
 		return;
 	}
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	if (!InputConfig)
 	{
-		OW_ACTOR_LOG(LogOWGame, Warning, this, "PlayerInputComponent is not UOWInputComponent. Falling back to legacy direct InputAction bindings.");
-		BindLegacyInputActions(EnhancedInputComponent);
+		OW_ACTOR_LOG(LogOWGame, Error, this, "InputConfig is not set.");
 		return;
 	}
 
-	UE_LOG(LogOWGame, Error, TEXT("'%s' Failed to find an Enhanced Input Component."), *GetNameSafe(this));
+	BindTaggedInputActions(OWInputComponent);
 }
 
 void AOWCharacterBase::BindTaggedInputActions(UOWInputComponent* InInputComponent)
@@ -91,67 +124,6 @@ void AOWCharacterBase::BindTaggedInputActions(UOWInputComponent* InInputComponen
 	InInputComponent->BindNativeAction(InputConfig, FOWGameplayTags::GetInputTagMove(), ETriggerEvent::Triggered, this, &AOWCharacterBase::MoveInput);
 	InInputComponent->BindNativeAction(InputConfig, FOWGameplayTags::GetInputTagLook(), ETriggerEvent::Triggered, this, &AOWCharacterBase::LookInput);
 	InInputComponent->BindNativeAction(InputConfig, FOWGameplayTags::GetInputTagLookMouse(), ETriggerEvent::Triggered, this, &AOWCharacterBase::LookInput, false);
-	InInputComponent->BindAbilityActions(InputConfig, ETriggerEvent::Started, this, &AOWCharacterBase::HandleAbilityInputPressed);
-}
-
-void AOWCharacterBase::BindLegacyInputActions(UEnhancedInputComponent* InInputComponent)
-{
-	check(InInputComponent);
-
-	InInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AOWCharacterBase::DoCrouchStart);
-	InInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AOWCharacterBase::DoCrouchEnd);
-	InInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AOWCharacterBase::DoJumpStart);
-	InInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AOWCharacterBase::DoJumpEnd);
-	InInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AOWCharacterBase::MoveInput);
-	InInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AOWCharacterBase::LookInput);
-	InInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AOWCharacterBase::LookInput);
-	InInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AOWCharacterBase::DoShoot);
-	InInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AOWCharacterBase::DoReload);
-	InInputComponent->BindAction(Skill1Action, ETriggerEvent::Started, this, &AOWCharacterBase::DoSkill1);
-	InInputComponent->BindAction(Skill2Action, ETriggerEvent::Started, this, &AOWCharacterBase::DoSkill2);
-	InInputComponent->BindAction(Skill3Action, ETriggerEvent::Started, this, &AOWCharacterBase::DoSkill3);
-	InInputComponent->BindAction(UltimateAction, ETriggerEvent::Started, this, &AOWCharacterBase::DoUltimate);
-}
-
-void AOWCharacterBase::HandleAbilityInputPressed(FGameplayTag InInputTag)
-{
-	if (InInputTag == FOWGameplayTags::GetInputTagShoot())
-	{
-		DoShoot();
-		return;
-	}
-
-	if (InInputTag == FOWGameplayTags::GetInputTagReload())
-	{
-		DoReload();
-		return;
-	}
-
-	if (InInputTag == FOWGameplayTags::GetInputTagAbilitySkill1())
-	{
-		DoSkill1();
-		return;
-	}
-
-	if (InInputTag == FOWGameplayTags::GetInputTagAbilitySkill2())
-	{
-		DoSkill2();
-		return;
-	}
-
-	if (InInputTag == FOWGameplayTags::GetInputTagAbilitySkill3())
-	{
-		DoSkill3();
-		return;
-	}
-
-	if (InInputTag == FOWGameplayTags::GetInputTagAbilityUltimate())
-	{
-		DoUltimate();
-		return;
-	}
-
-	OW_ACTOR_LOG(LogOWAbilitySystem, Warning, this, "Unhandled ability input tag: %s", *InInputTag.ToString());
 }
 
 
