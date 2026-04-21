@@ -13,6 +13,7 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UOWInputComponent;
 class UOWInputConfig;
+class UOWPawnExtensionComponent;
 struct FInputActionValue;
 
 /**
@@ -42,6 +43,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UOWInputConfig> InputConfig;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UOWPawnExtensionComponent> PawnExtensionComponent;
 	
 public:
 	AOWCharacterBase();
@@ -121,6 +125,8 @@ public:
 
 	/** Returns weapon mesh component **/
 	USkeletalMeshComponent* GetWeaponMeshComponent() const { return WeaponMeshComponent; }
+
+	UOWPawnExtensionComponent* GetPawnExtensionComponent() const { return PawnExtensionComponent; }
 
 };
 

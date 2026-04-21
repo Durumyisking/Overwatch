@@ -3,6 +3,7 @@
 #include "OWCharacterBase.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Character/Components/OWPawnExtensionComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Data/OWHeroData.h"
@@ -17,6 +18,8 @@
 
 AOWCharacterBase::AOWCharacterBase()
 {
+	PawnExtensionComponent = CreateDefaultSubobject<UOWPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	
@@ -96,6 +99,8 @@ void AOWCharacterBase::OnRep_PlayerState()
 
 void AOWCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
 	UOWInputComponent* OWInputComponent = Cast<UOWInputComponent>(PlayerInputComponent);
 	if (!OWInputComponent)
 	{
@@ -110,6 +115,11 @@ void AOWCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 
 	BindTaggedInputActions(OWInputComponent);
+
+	if (PawnExtensionComponent)
+	{
+		PawnExtensionComponent->SetupPlayerInputComponent();
+	}
 }
 
 void AOWCharacterBase::BindTaggedInputActions(UOWInputComponent* InInputComponent)

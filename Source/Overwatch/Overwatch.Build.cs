@@ -20,6 +20,8 @@ public class Overwatch : ModuleRules
 			"Engine", 
 			"InputCore", 
 			"EnhancedInput", 
+			"ModularGameplay",
+			"GameFeatures",
 			
 			"GameplayTags",
 			"GameplayTasks",

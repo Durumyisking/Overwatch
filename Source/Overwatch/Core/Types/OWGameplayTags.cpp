@@ -3,6 +3,7 @@
 #include "GameplayTagsManager.h"
 
 bool FOWGameplayTags::bIsInitialized = false;
+FOWGameplayTags FOWGameplayTags::GameplayTags;
 FGameplayTag FOWGameplayTags::InputTag_Crouch;
 FGameplayTag FOWGameplayTags::InputTag_Jump;
 FGameplayTag FOWGameplayTags::InputTag_Move;
@@ -44,6 +45,21 @@ void FOWGameplayTags::InitializeNativeTags()
 	}
 
 	UGameplayTagsManager::Get();
+	GameplayTags.AddAllTags();
+	bIsInitialized = true;
+}
+
+const FOWGameplayTags& FOWGameplayTags::Get()
+{
+	return GameplayTags;
+}
+
+void FOWGameplayTags::AddAllTags()
+{
+	AddTag(InitState_Spawned, "InitState.Spawned", "Actor or component has spawned.");
+	AddTag(InitState_DataAvailable, "InitState.DataAvailable", "Required data is available.");
+	AddTag(InitState_DataInitialized, "InitState.DataInitialized", "Available data has been initialized.");
+	AddTag(InitState_GameplayReady, "InitState.GameplayReady", "Actor or component is ready for gameplay.");
 	AddTag(InputTag_Crouch, "InputTag.Crouch", "Input for crouch.");
 	AddTag(InputTag_Jump, "InputTag.Jump", "Input for jump.");
 	AddTag(InputTag_Move, "InputTag.Move", "Input for movement.");
@@ -55,7 +71,6 @@ void FOWGameplayTags::InitializeNativeTags()
 	AddTag(InputTag_Ability_Skill2, "InputTag.Ability.Skill2", "Input for hero ability slot 2.");
 	AddTag(InputTag_Ability_Skill3, "InputTag.Ability.Skill3", "Input for hero ability slot 3.");
 	AddTag(InputTag_Ability_Ultimate, "InputTag.Ability.Ultimate", "Input for ultimate ability.");
-	bIsInitialized = true;
 }
 
 const FGameplayTag& FOWGameplayTags::GetInputTagCrouch()

@@ -6,6 +6,8 @@
 
 struct FOWHeroData;
 class UOWAbilitySystemComponent;
+class UOWExperienceDefinition;
+class UOWPawnData;
 
 UCLASS()
 class OVERWATCH_API AOWPlayerState : public APlayerState
@@ -17,6 +19,14 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	UOWAbilitySystemComponent* GetAbilitySystemComponent() const;
+	template <class T>
+	const T* GetPawnData() const
+	{
+		return Cast<T>(PawnData);
+	}
+
+	void OnExperienceLoaded(const UOWExperienceDefinition* InCurrentExperience);
+	void SetPawnData(const UOWPawnData* InPawnData);
 	void SetHeroData(const FOWHeroData* InHeroData);
 
 protected:
@@ -28,4 +38,7 @@ protected:
 
 	UPROPERTY()
 	FOWAbilitySet_GrantedHandles GrantedAbilityHandles;
+
+	UPROPERTY()
+	TObjectPtr<const UOWPawnData> PawnData;
 };

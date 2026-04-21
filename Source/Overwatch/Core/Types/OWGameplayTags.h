@@ -5,7 +5,9 @@
 
 struct OVERWATCH_API FOWGameplayTags
 {
+	static const FOWGameplayTags& Get();
 	static void InitializeNativeTags();
+	void AddAllTags();
 	static const FGameplayTag& GetInputTagCrouch();
 	static const FGameplayTag& GetInputTagJump();
 	static const FGameplayTag& GetInputTagMove();
@@ -22,10 +24,16 @@ struct OVERWATCH_API FOWGameplayTags
 	static void GetLeafTagsUnder(const FGameplayTag& InRootTag, TArray<FGameplayTag>& OutLeafTags, bool bSortLexicographically = true);
 	static bool IsLeafTag(const FGameplayTag& InTag);
 
+	FGameplayTag InitState_Spawned;
+	FGameplayTag InitState_DataAvailable;
+	FGameplayTag InitState_DataInitialized;
+	FGameplayTag InitState_GameplayReady;
+
 private:
 	static void AddTag(FGameplayTag& OutTag, const ANSICHAR* InTagName, const ANSICHAR* InTagComment);
 	static int32 GetTagSegmentCount(const FGameplayTag& InTag);
 	static bool bIsInitialized;
+	static FOWGameplayTags GameplayTags;
 	static FGameplayTag InputTag_Crouch;
 	static FGameplayTag InputTag_Jump;
 	static FGameplayTag InputTag_Move;
