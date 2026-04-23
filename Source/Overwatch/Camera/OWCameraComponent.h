@@ -8,7 +8,7 @@ class UOWCameraModeStack;
 
 DECLARE_DELEGATE_RetVal(TSubclassOf<UOWCameraMode>, FOWCameraModeDelegate);
 
-UCLASS()
+UCLASS(ClassGroup = (Camera), Meta = (BlueprintSpawnableComponent))
 class OVERWATCH_API UOWCameraComponent : public UCameraComponent
 {
 	GENERATED_BODY()

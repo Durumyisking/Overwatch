@@ -1,32 +1,29 @@
 # Project Context Rules
 
 ## Repository Contract
-- This is an Unreal Engine 5.7.3 C++ project rooted at `Overwatch.uproject`.
-- Treat the repository root as the working root.
-- Prefer local, compile-safe changes that preserve explicit ownership and multiplayer correctness.
-
-## Learning Goals
-- Dedicated Server
-- CommonUI
-- GAS
-- MVVM
+- This is an Unreal Engine Overwatch-style study project.
+- The current learning focus is dedicated server, GAS, CommonUI, MVVM, and Lyra-style modular initialization.
+- Treat the repository root as the working root and prefer the local `.uproject` as the main project root when present.
+- Preserve deterministic multiplayer behavior, runtime consistency, and explicit gameplay state ownership.
 
 ## Project Priorities
-- Server authority first.
-- Clear ownership and one source of truth per runtime datum.
-- UI and gameplay logic separation.
-- Dedicated-server-safe initialization and flow control.
-- Learning-friendly architecture over tutorial shortcuts.
+- Server-authoritative gameplay comes first.
+- Keep GAS ownership, AvatarActor, OwnerActor, ability grants, input binding, and respawn flow explicit.
+- Keep CommonUI and MVVM in presentation and input-routing roles only.
+- Prefer Lyra/Hak-style Experience, GameStateComponent, GameFrameworkComponentManager, and GameFeature driven setup when it fits the current slice.
+- Start from the smallest playable multiplayer slice before adding broad live-service systems.
+- Keep ownership explicit: who owns, mutates, serializes, restores, and invalidates each runtime datum.
 
-## Build And Verification Commands
+## Project Commands
 - Editor build:
-  `F:\UE_5.7\Engine\Build\BatchFiles\Build.bat OverwatchEditor Win64 Development "F:\Dev\Overwatch\Overwatch.uproject" -WaitMutex`
-- If a dedicated server target is added later, verify server builds separately instead of assuming editor success proves server safety.
-- Automation test pattern:
-  `"<UEEditor-Cmd.exe>" "F:\Dev\Overwatch\Overwatch.uproject" -ExecCmds="Automation RunTests <Filter>; Quit" -unattended -nop4 -nosplash`
+  `F:\UE_5.7.4\Engine\Build\BatchFiles\Build.bat OverwatchEditor Win64 Development "F:\Dev\Overwatch\Overwatch.uproject" -WaitMutex`
+- Server build:
+  `F:\UE_5.7.4\Engine\Build\BatchFiles\Build.bat OverwatchServer Win64 Development "F:\Dev\Overwatch\Overwatch.uproject" -WaitMutex`
+- Automation test example:
+  `"<UnrealEditor-Cmd.exe>" "F:\Dev\Overwatch\Overwatch.uproject" -ExecCmds="Automation RunTests <Filter>; Quit" -unattended -nop4 -nosplash`
 
 ## Suggested Reading Order
-- Inspect the directly affected module in `Source/` first.
-- Check related config in `Config/` second.
-- Read local docs third.
-- Broaden only after confirming the current owner and authority path.
+- Inspect `Source/` first.
+- Inspect `Config/` second.
+- Check `Docs/Research/` only when the task touches Lyra adoption or Overwatch gameplay direction.
+- Broaden only after checking the directly affected module.

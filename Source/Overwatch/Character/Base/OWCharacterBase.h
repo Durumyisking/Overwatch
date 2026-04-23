@@ -3,130 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"
 #include "GameFramework/Character.h"
-#include "GameplayTagContainer.h"
 #include "OWCharacterBase.generated.h"
 
-class UInputComponent;
-class USkeletalMeshComponent;
-class UCameraComponent;
-class UOWInputComponent;
-class UOWInputConfig;
 class UOWPawnExtensionComponent;
-struct FInputActionValue;
 
-/**
- *  A basic first person character
- */
 UCLASS(abstract)
 class AOWCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Pawn mesh: first person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* FirstPersonMesh;
-
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FirstPersonCameraComponent;
-
-	/** Weapon mesh shown for the owning player */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* WeaponMeshComponent;
-
-protected:
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data", meta = (RowType="/Script/Overwatch.OWHeroData", AllowPrivateAccess = "true"))
-	FDataTableRowHandle HeroDataRowHandle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UOWInputConfig> InputConfig;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UOWPawnExtensionComponent> PawnExtensionComponent;
-	
 public:
 	AOWCharacterBase();
 
-protected:
-	virtual void PossessedBy(AController* InNewController) override;
-	virtual void OnRep_PlayerState() override;
-
-	/** Called from Input Actions for movement input */
-	void MoveInput(const FInputActionValue& Value);
-
-	/** Called from Input Actions for looking input */
-	void LookInput(const FInputActionValue& Value);
-
-	/** Handles aim inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
-
-	/** Handles move inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
-
-	/** Handles jump start inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpStart();
-
-	/** Handles jump end inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpEnd();
-
-	/** Handles crouch start inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoCrouchStart();
-
-	/** Handles crouch end inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoCrouchEnd();
-
-	/** Handles shoot inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoShoot();
-
-	/** Handles reload inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoReload();
-
-	/** Handles skill1 inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoSkill1();
-
-	/** Handles skill2 inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoSkill2();
-
-	/** Handles skill3 inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoSkill3();
-
-	/** Handles ultimate inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoUltimate();
-
-protected:
-	void BindTaggedInputActions(UOWInputComponent* InInputComponent);
-
-	/** Set up input action bindings */
-	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	
-
-public:
-
-	/** Returns the first person mesh **/
-	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
-
-	/** Returns first person camera component **/
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-	/** Returns weapon mesh component **/
-	USkeletalMeshComponent* GetWeaponMeshComponent() const { return WeaponMeshComponent; }
-
-	UOWPawnExtensionComponent* GetPawnExtensionComponent() const { return PawnExtensionComponent; }
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hak|Character")
+	TObjectPtr<UOWPawnExtensionComponent> PawnExtComponent;
 };
 

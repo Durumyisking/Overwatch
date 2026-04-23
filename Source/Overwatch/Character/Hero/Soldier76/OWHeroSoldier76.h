@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "Character/Base/OWCharacterBase.h"
+#include "Character/Hero/OWFPSHeroBase.h"
 #include "OWHeroSoldier76.generated.h"
 
 UCLASS()
-class OVERWATCH_API AOWHeroSoldier76 : public AOWCharacterBase
+class OVERWATCH_API AOWHeroSoldier76 : public AOWFPSHeroBase
 {
 	GENERATED_BODY()
 
