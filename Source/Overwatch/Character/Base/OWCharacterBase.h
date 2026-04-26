@@ -9,14 +9,18 @@
 class UOWPawnExtensionComponent;
 
 UCLASS(abstract)
-class AOWCharacterBase : public ACharacter
+class OVERWATCH_API AOWCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
 	AOWCharacterBase();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hak|Character")
+protected:
+	virtual void SetupPlayerInputComponent(UInputComponent* InInputComponent) override;
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OW|Character")
 	TObjectPtr<UOWPawnExtensionComponent> PawnExtComponent;
 };
 

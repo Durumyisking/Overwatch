@@ -1,10 +1,8 @@
 #pragma once
 
-#include "AbilitySystem/OWAbilitySet.h"
 #include "GameFramework/PlayerState.h"
 #include "OWPlayerState.generated.h"
 
-struct FOWHeroData;
 class UOWAbilitySystemComponent;
 class UOWExperienceDefinition;
 class UOWPawnData;
@@ -17,6 +15,7 @@ class OVERWATCH_API AOWPlayerState : public APlayerState
 public:
 	AOWPlayerState();
 	virtual void PostInitializeComponents() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UOWAbilitySystemComponent* GetAbilitySystemComponent() const;
 	template <class T>
@@ -27,18 +26,11 @@ public:
 
 	void OnExperienceLoaded(const UOWExperienceDefinition* InCurrentExperience);
 	void SetPawnData(const UOWPawnData* InPawnData);
-	void SetHeroData(const FOWHeroData* InHeroData);
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "OW|PlayerState")
 	TObjectPtr<UOWAbilitySystemComponent> AbilitySystemComponent;
 
-	UPROPERTY()
-	TObjectPtr<UOWAbilitySet> AppliedAbilitySet;
-
-	UPROPERTY()
-	FOWAbilitySet_GrantedHandles GrantedAbilityHandles;
-
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	TObjectPtr<const UOWPawnData> PawnData;
 };

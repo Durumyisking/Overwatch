@@ -4,6 +4,7 @@
 #include "Core/Types/OWGameplayTags.h"
 #include "Data/OWPawnData.h"
 #include "OWLog.h"
+#include "Net/UnrealNetwork.h"
 
 const FName UOWPawnExtensionComponent::NAME_ActorFeatureName(TEXT("PawnExtension"));
 
@@ -12,6 +13,7 @@ UOWPawnExtensionComponent::UOWPawnExtensionComponent(const FObjectInitializer& O
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	SetIsReplicatedByDefault(true);
 }
 
 void UOWPawnExtensionComponent::SetPawnData(const UOWPawnData* InPawnData)
@@ -28,6 +30,7 @@ void UOWPawnExtensionComponent::SetPawnData(const UOWPawnData* InPawnData)
 	}
 
 	PawnData = InPawnData;
+	CheckDefaultInitialization();
 }
 
 void UOWPawnExtensionComponent::SetupPlayerInputComponent()
@@ -61,6 +64,19 @@ void UOWPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 {
 	UnregisterInitStateFeature();
 	Super::EndPlay(EndPlayReason);
+}
+
+void UOWPawnExtensionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UOWPawnExtensionComponent, PawnData);
+}
+
+void UOWPawnExtensionComponent::OnRep_PawnData()
+{
+	// Replicated PawnData is the data-availability gate for client-side feature initialization.
+	CheckDefaultInitialization();
 }
 
 void UOWPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)

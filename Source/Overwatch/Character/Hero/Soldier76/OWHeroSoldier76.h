@@ -12,12 +12,4 @@ class OVERWATCH_API AOWHeroSoldier76 : public AOWFPSHeroBase
 
 public:
 	AOWHeroSoldier76();
-
-protected:
-	virtual void DoShoot() override;
-	virtual void DoReload() override;
-	virtual void DoSkill1() override;
-	virtual void DoSkill2() override;
-	virtual void DoSkill3() override;
-	virtual void DoUltimate() override;
 };

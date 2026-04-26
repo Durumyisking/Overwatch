@@ -33,6 +33,7 @@ public:
 	virtual void OnRegister() override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual FName GetFeatureName() const override { return NAME_ActorFeatureName; }
 	virtual void OnActorInitStateChanged(const FActorInitStateChangedParams& Params) override;
@@ -40,6 +41,9 @@ public:
 	virtual void CheckDefaultInitialization() override;
 
 protected:
-	UPROPERTY(EditInstanceOnly, Category = "OW|Pawn")
+	UFUNCTION()
+	void OnRep_PawnData();
+
+	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_PawnData, Category = "OW|Pawn")
 	TObjectPtr<const UOWPawnData> PawnData;
 };

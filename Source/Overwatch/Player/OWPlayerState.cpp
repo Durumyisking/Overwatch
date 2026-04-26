@@ -1,16 +1,17 @@
 #include "OWPlayerState.h"
 
 #include "AbilitySystem/OWAbilitySystemComponent.h"
-#include "AbilitySystem/OWAbilitySet.h"
-#include "Data/OWHeroData.h"
 #include "Data/OWPawnData.h"
 #include "Game/OWExperienceDefinition.h"
 #include "Game/OWExperienceManagerComponent.h"
 #include "Game/OWGameMode.h"
+#include "Net/UnrealNetwork.h"
 
 AOWPlayerState::AOWPlayerState()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UOWAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 }
 
 void AOWPlayerState::PostInitializeComponents()
@@ -33,6 +34,13 @@ void AOWPlayerState::PostInitializeComponents()
 	}
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}
+
+void AOWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AOWPlayerState, PawnData);
 }
 
 UOWAbilitySystemComponent* AOWPlayerState::GetAbilitySystemComponent() const
@@ -63,36 +71,4 @@ void AOWPlayerState::SetPawnData(const UOWPawnData* InPawnData)
 	}
 
 	PawnData = InPawnData;
-}
-
-void AOWPlayerState::SetHeroData(const FOWHeroData* InHeroData)
-{
-	if (!AbilitySystemComponent)
-	{
-		return;
-	}
-
-	if (!InHeroData)
-	{
-		return;
-	}
-
-	UOWAbilitySet* NewAbilitySet = InHeroData->AbilitySet;
-	if (AppliedAbilitySet == NewAbilitySet)
-	{
-		return;
-	}
-
-	if (AppliedAbilitySet)
-	{
-		GrantedAbilityHandles.TakeFromAbilitySystem(AbilitySystemComponent);
-		GrantedAbilityHandles = FOWAbilitySet_GrantedHandles();
-		AppliedAbilitySet = nullptr;
-	}
-
-	if (NewAbilitySet)
-	{
-		NewAbilitySet->GiveAbilitySystem(AbilitySystemComponent, &GrantedAbilityHandles);
-		AppliedAbilitySet = NewAbilitySet;
-	}
 }
