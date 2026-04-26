@@ -6,8 +6,7 @@
 /NAME:"UnrealEditor-ShooterCoreRuntime.dll"
 /IGNORE:4221
 /NODEFAULTLIB
-"../Intermediate/Build/Win64/x64/UnrealEditor/Development/UnrealEd/SharedPCH.UnrealEd.Cpp20.h.obj"
+"../Intermediate/Build/Win64/x64/UnrealEditor/Development/UnrealEd/SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.h.obj"
 "F:/Dev/Overwatch/Plugins/GameFeatures/ShooterCore/Intermediate/Build/Win64/x64/UnrealEditor/Development/ShooterCoreRuntime/Module.ShooterCoreRuntime.cpp.obj"
-"F:/Dev/Overwatch/Plugins/GameFeatures/ShooterCore/Intermediate/Build/Win64/x64/UnrealEditor/Development/ShooterCoreRuntime/ShooterCoreRuntimeModule.cpp.obj"
 "../Intermediate/Build/Win64/x64/UnrealEditor/Development/Default.rc2.res"
 /OUT:"F:/Dev/Overwatch/Plugins/GameFeatures/ShooterCore/Intermediate/Build/Win64/x64/UnrealEditor/Development/ShooterCoreRuntime/UnrealEditor-ShooterCoreRuntime.lib"

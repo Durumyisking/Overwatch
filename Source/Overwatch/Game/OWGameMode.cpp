@@ -20,37 +20,19 @@ void AOWGameMode::InitGame(const FString& InMapName, const FString& InOptions, F
 {
 	Super::InitGame(InMapName, InOptions, OutErrorMessage);
 
-	RequestedExperienceId = FPrimaryAssetId();
-	if (UGameplayStatics::HasOption(OptionsString, TEXT("Experience")))
-	{
-		const FString ExperienceFromOptions = UGameplayStatics::ParseOption(OptionsString, TEXT("Experience"));
-		RequestedExperienceId = FPrimaryAssetId(FPrimaryAssetType(UOWExperienceDefinition::StaticClass()->GetFName()), FName(*ExperienceFromOptions));
-	}
-	else if (DefaultExperienceId.IsValid())
-	{
-		RequestedExperienceId = DefaultExperienceId;
-	}
-
-	if (RequestedExperienceId.IsValid())
-	{
-		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleMatchAssignmentIfNotExpectingOne);
-	}
+	// GameState components finish their startup after InitGame, so defer Experience assignment one tick.
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleMatchAssignmentIfNotExpectingOne);
 }
 
 void AOWGameMode::InitGameState()
 {
 	Super::InitGameState();
 
-	if (!GameState)
-	{
-		return;
-	}
-
+	// GameMode only orchestrates the server flow. The GameState component owns Experience loading.
 	UOWExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<UOWExperienceManagerComponent>();
-	if (ExperienceManagerComponent)
-	{
-		ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnOWExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
-	}
+	check(ExperienceManagerComponent);
+
+	ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnOWExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
 }
 
 UClass* AOWGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
@@ -68,7 +50,8 @@ UClass* AOWGameMode::GetDefaultPawnClassForController_Implementation(AController
 
 void AOWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* InNewPlayer)
 {
-	if (!RequestedExperienceId.IsValid() || IsExperienceLoaded())
+	// Players start only after Experience data is loaded, because PawnData decides the Pawn class.
+	if (IsExperienceLoaded())
 	{
 		Super::HandleStartingNewPlayer_Implementation(InNewPlayer);
 	}
@@ -103,39 +86,46 @@ APawn* AOWGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* InNe
 
 void AOWGameMode::HandleMatchAssignmentIfNotExpectingOne()
 {
-	if (RequestedExperienceId.IsValid())
+	FPrimaryAssetId ExperienceId;
+
+	// URL option has the highest priority so playlists or launch commands can select the Experience.
+	if (!ExperienceId.IsValid() && UGameplayStatics::HasOption(OptionsString, TEXT("Experience")))
 	{
-		OnMatchAssignmentGiven(RequestedExperienceId);
+		const FString ExperienceFromOptions = UGameplayStatics::ParseOption(OptionsString, TEXT("Experience"));
+		ExperienceId = FPrimaryAssetId(FPrimaryAssetType(UOWExperienceDefinition::StaticClass()->GetFName()), FName(*ExperienceFromOptions));
 	}
+
+	// Fall back to the project default Experience when no external assignment exists.
+	if (!ExperienceId.IsValid())
+	{
+		ExperienceId = FPrimaryAssetId(FPrimaryAssetType(UOWExperienceDefinition::StaticClass()->GetFName()), FName(TEXT("BP_LyraDefaultExperience")));
+	}
+
+	OnMatchAssignmentGiven(ExperienceId);
 }
 
 void AOWGameMode::OnMatchAssignmentGiven(FPrimaryAssetId InExperienceId)
 {
-	if (!GameState || !InExperienceId.IsValid())
-	{
-		return;
-	}
+	check(InExperienceId.IsValid());
 
 	UOWExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<UOWExperienceManagerComponent>();
-	if (ExperienceManagerComponent)
-	{
-		ExperienceManagerComponent->ServerSetCurrentExperience(InExperienceId);
-	}
+	check(ExperienceManagerComponent);
+
+	ExperienceManagerComponent->ServerSetCurrentExperience(InExperienceId);
 }
 
 bool AOWGameMode::IsExperienceLoaded() const
 {
-	if (!GameState)
-	{
-		return false;
-	}
-
+	check(GameState);
 	const UOWExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<UOWExperienceManagerComponent>();
-	return ExperienceManagerComponent && ExperienceManagerComponent->IsExperienceLoaded();
+	check(ExperienceManagerComponent);
+
+	return ExperienceManagerComponent->IsExperienceLoaded();
 }
 
 void AOWGameMode::OnExperienceLoaded(const UOWExperienceDefinition* InCurrentExperience)
 {
+	// Late-start players are held until Experience load completes, then spawned through the normal restart path.
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(*Iterator);
@@ -148,6 +138,7 @@ void AOWGameMode::OnExperienceLoaded(const UOWExperienceDefinition* InCurrentExp
 
 const UOWPawnData* AOWGameMode::GetPawnDataForController(const AController* InController) const
 {
+	// PlayerState can override PawnData later for hero selection or playlist-specific assignment.
 	if (InController)
 	{
 		if (const AOWPlayerState* PlayerState = InController->GetPlayerState<AOWPlayerState>())
@@ -159,17 +150,19 @@ const UOWPawnData* AOWGameMode::GetPawnDataForController(const AController* InCo
 		}
 	}
 
-	if (!GameState)
-	{
-		return nullptr;
-	}
-
+	// Otherwise, use the Experience default. GameMode orchestrates; Experience owns the default data.
+	check(GameState);
 	const UOWExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<UOWExperienceManagerComponent>();
-	if (!ExperienceManagerComponent || !ExperienceManagerComponent->IsExperienceLoaded())
+	check(ExperienceManagerComponent);
+
+	if (ExperienceManagerComponent->IsExperienceLoaded())
 	{
-		return nullptr;
+		const UOWExperienceDefinition* Experience = ExperienceManagerComponent->GetCurrentExperienceChecked();
+		if (Experience->DefaultPawnData)
+		{
+			return Experience->DefaultPawnData;
+		}
 	}
 
-	const UOWExperienceDefinition* Experience = ExperienceManagerComponent->GetCurrentExperienceChecked();
-	return Experience ? Experience->DefaultPawnData : nullptr;
+	return nullptr;
 }

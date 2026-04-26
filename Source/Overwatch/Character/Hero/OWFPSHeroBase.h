@@ -6,6 +6,7 @@
 #include "Engine/DataTable.h"
 #include "OWFPSHeroBase.generated.h"
 
+class UOWCameraComponent;
 class UCameraComponent;
 class UOWInputComponent;
 class UOWInputConfig;
@@ -76,13 +77,12 @@ private:
 	TObjectPtr<USkeletalMeshComponent> FirstPersonMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
+	TObjectPtr<UOWCameraComponent> CameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> WeaponMeshComponent;
 
 public:
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 	USkeletalMeshComponent* GetWeaponMeshComponent() const { return WeaponMeshComponent; }
 };

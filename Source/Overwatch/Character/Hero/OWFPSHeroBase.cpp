@@ -14,6 +14,7 @@
 #include "Input/OWInputConfig.h"
 #include "InputActionValue.h"
 #include "OWLog.h"
+#include "Camera/OWCameraComponent.h"
 #include "Player/OWPlayerState.h"
 
 AOWFPSHeroBase::AOWFPSHeroBase()
@@ -26,17 +27,14 @@ AOWFPSHeroBase::AOWFPSHeroBase()
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
-	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
-	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
-	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
+	CameraComponent = CreateDefaultSubobject<UOWCameraComponent>(TEXT("First Person Camera"));
+	CameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
+	CameraComponent->bUsePawnControlRotation = true;
+	CameraComponent->bEnableFirstPersonFieldOfView = true;
+	CameraComponent->bEnableFirstPersonScale = true;
 
 	WeaponMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Mesh"));
-	WeaponMeshComponent->SetupAttachment(FirstPersonCameraComponent);
+	WeaponMeshComponent->SetupAttachment(FirstPersonMesh);
 	WeaponMeshComponent->SetOnlyOwnerSee(true);
 	WeaponMeshComponent->SetCollisionProfileName(FName("NoCollision"));
 

@@ -3,11 +3,13 @@
     "Data": {
         "Source": "f:\\dev\\overwatch\\plugins\\gamefeatures\\shootercore\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\shootercoreruntime\\module.shootercoreruntime.cpp",
         "ProvidedModule": "",
-        "PCH": "f:\\ue_5.7.4\\engine\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\unrealed\\sharedpch.unrealed.cpp20.h.pch",
+        "PCH": "f:\\ue_5.7.4\\engine\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.h.pch",
         "Includes": [
             "f:\\dev\\overwatch\\plugins\\gamefeatures\\shootercore\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\shootercoreruntime\\definitions.shootercoreruntime.h",
             "f:\\dev\\overwatch\\plugins\\gamefeatures\\shootercore\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\shootercoreruntime\\permoduleinline.gen.cpp",
-            "f:\\ue_5.7.4\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl"
+            "f:\\ue_5.7.4\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl",
+            "f:\\dev\\overwatch\\plugins\\gamefeatures\\shootercore\\source\\shootercoreruntime\\private\\shootercoreruntimemodule.cpp",
+            "f:\\dev\\overwatch\\plugins\\gamefeatures\\shootercore\\source\\shootercoreruntime\\public\\shootercoreruntimemodule.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
