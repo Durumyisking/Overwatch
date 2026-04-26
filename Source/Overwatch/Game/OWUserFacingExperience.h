@@ -3,6 +3,8 @@
 #include "Engine/DataAsset.h"
 #include "OWUserFacingExperience.generated.h"
 
+class UCommonSession_HostSessionRequest;
+
 UCLASS()
 class OVERWATCH_API UOWUserFacingExperience : public UPrimaryDataAsset
 {
@@ -10,7 +12,7 @@ class OVERWATCH_API UOWUserFacingExperience : public UPrimaryDataAsset
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false)
-	UObject* CreateHostingRequest() const;
+	UCommonSession_HostSessionRequest* CreateHostingRequest() const;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Experience", meta = (AllowedTypes = "Map"))
 	FPrimaryAssetId MapID;
