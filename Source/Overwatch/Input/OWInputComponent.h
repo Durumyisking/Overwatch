@@ -13,9 +13,11 @@ class OVERWATCH_API UOWInputComponent : public UEnhancedInputComponent
 public:
 	UOWInputComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	/** 입력 태그에 대응하는 Native InputAction을 찾아 지정 TriggerEvent에 바인딩한다. */
 	template <class UserClass, typename FuncType>
 	void BindNativeAction(const UOWInputConfig* InInputConfig, const FGameplayTag& InInputTag, ETriggerEvent InTriggerEvent, UserClass* InObject, FuncType InFunc, bool bLogIfNotFound = true);
 
+	/** AbilityInputActions에 등록된 모든 액션을 입력 태그와 함께 ASC 전달 함수에 바인딩한다. */
 	template <class UserClass, typename FuncType>
 	void BindAbilityActions(const UOWInputConfig* InInputConfig, ETriggerEvent InTriggerEvent, UserClass* InObject, FuncType InFunc);
 };

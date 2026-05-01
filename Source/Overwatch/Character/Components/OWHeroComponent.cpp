@@ -6,11 +6,12 @@
 #include "Core/Types/OWGameplayTags.h"
 #include "Data/OWPawnData.h"
 #include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
 #include "InputActionValue.h"
 #include "Input/OWInputComponent.h"
 #include "Input/OWInputConfig.h"
 #include "Player/OWPlayerState.h"
-#include "PlayerMappableInputConfig.h"
+#include "UserSettings/EnhancedInputUserSettings.h"
 
 const FName UOWHeroComponent::NAME_ActorFeatureName(TEXT("Hero"));
 const FName UOWHeroComponent::NAME_BindInputsNow(TEXT("BindInputsNow"));
@@ -185,23 +186,22 @@ void UOWHeroComponent::InitializePlayerInput(UInputComponent* InPlayerInputCompo
 		{
 			if (const UOWInputConfig* InputConfig = PawnData->InputConfig)
 			{
-				for (const FOWMappableConfigPair& Pair : DefaultInputConfigs)
-				{
-					if (Pair.bShouldActivateAutomatically)
-					{
-						if (const UPlayerMappableInputConfig* PlayerMappableConfig = Pair.Config.LoadSynchronous())
-						{
-							FModifyContextOptions Options;
-							Options.bIgnoreAllPressedKeysUntilRelease = false;
+				FModifyContextOptions Options;
+				Options.bIgnoreAllPressedKeysUntilRelease = false;
 
-							for (const TPair<TObjectPtr<UInputMappingContext>, int32>& MappingPair : PlayerMappableConfig->GetMappingContexts())
+				for (const FOWInputMappingContextAndPriority& Mapping : DefaultInputMappings)
+				{
+					if (UInputMappingContext* InputMapping = Mapping.InputMapping.LoadSynchronous())
+					{
+						if (Mapping.bRegisterWithSettings)
+						{
+							if (UEnhancedInputUserSettings* Settings = InputSubsystem->GetUserSettings())
 							{
-								if (MappingPair.Key)
-								{
-									InputSubsystem->AddMappingContext(MappingPair.Key, MappingPair.Value, Options);
-								}
+								Settings->RegisterInputMappingContext(InputMapping);
 							}
 						}
+
+						InputSubsystem->AddMappingContext(InputMapping, Mapping.Priority, Options);
 					}
 				}
 
@@ -212,6 +212,7 @@ void UOWHeroComponent::InitializePlayerInput(UInputComponent* InPlayerInputCompo
 		}
 	}
 
+	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PlayerController), NAME_BindInputsNow);
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APawn*>(Pawn), NAME_BindInputsNow);
 }
 

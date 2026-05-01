@@ -6,9 +6,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "OWGameplayAbility.generated.h"
 
-/**
- * 
- */
+/** OW 프로젝트의 모든 GameplayAbility가 공통으로 상속할 기본 Ability 클래스 */
 UCLASS()
 class OVERWATCH_API UOWGameplayAbility : public UGameplayAbility
 {

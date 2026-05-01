@@ -5,6 +5,7 @@
 
 class UGameFeatureAction;
 
+/** Experience 진입 시 함께 실행할 GameFeatureAction 묶음이다. */
 UCLASS()
 class OVERWATCH_API UOWExperienceActionSet : public UPrimaryDataAsset
 {
@@ -13,6 +14,7 @@ class OVERWATCH_API UOWExperienceActionSet : public UPrimaryDataAsset
 public:
 	UOWExperienceActionSet();
 
+	/** 이 액션 세트가 로드/활성화/비활성화 과정에서 실행할 액션 목록 */
 	UPROPERTY(EditAnywhere, Category = "Actions")
 	TArray<TObjectPtr<UGameFeatureAction>> Actions;
 };

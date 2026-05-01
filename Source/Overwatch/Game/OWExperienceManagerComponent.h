@@ -18,9 +18,8 @@ enum class EOWExperienceLoadState
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnOWExperienceLoaded, const UOWExperienceDefinition*);
 /**
- * HakExperienceManagerComponent
- * - 말 그대로, 해당 component는 game state를 owner로 가지면서, experience의 상태 정보를 가지고 있는 component이다
- * - 뿐만 아니라, manager라는 단어가 포함되어 있듯이, experience 로딩 상태 업데이트 및 이벤트를 관리한다
+ * GameState가 소유하는 Experience 로딩 상태 관리자다.
+ * Experience 에셋 로드, GameFeature 활성화, Action 실행을 순서대로 진행하고 완료 이벤트를 발행한다.
  */
 UCLASS()
 class OVERWATCH_API UOWExperienceManagerComponent : public UGameStateComponent
@@ -30,9 +29,7 @@ class OVERWATCH_API UOWExperienceManagerComponent : public UGameStateComponent
 public:
 	bool IsExperienceLoaded() const { return (LoadState == EOWExperienceLoadState::Loaded) && (CurrentExperience != nullptr); }
 
-/**
- * 아래의 OnExperienceLoaded에 바인딩하거나, 이미 Experience 로딩이 완료되었다면 바로 호출함
- */
+	/** Experience가 이미 로드되었으면 즉시 호출하고, 아직이면 완료 델리게이트에 등록한다. */
 	void CallOrRegister_OnExperienceLoaded(FOnOWExperienceLoaded::FDelegate&& Delegate);
 	void ServerSetCurrentExperience(FPrimaryAssetId InExperienceId);
 	void StartExperienceLoad();
@@ -41,6 +38,7 @@ public:
 	void OnExperienceFullLoadCompleted();
 	const UOWExperienceDefinition* GetCurrentExperienceChecked() const;
 
+	/** 현재 로드 중이거나 로드 완료된 Experience */
 	UPROPERTY()
 	TObjectPtr<const UOWExperienceDefinition> CurrentExperience;
 

@@ -6,9 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "OWAbilitySystemComponent.generated.h"
 
-/**
- * 
- */
+/** 프로젝트 전용 AbilitySystemComponent 확장 지점 */
 UCLASS()
 class OVERWATCH_API UOWAbilitySystemComponent : public UAbilitySystemComponent
 {

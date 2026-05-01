@@ -3,12 +3,15 @@
 #include "Character/Components/OWHeroComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "EnhancedInputSubsystems.h"
-#include "PlayerMappableInputConfig.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerController.h"
+#include "InputMappingContext.h"
+#include "UserSettings/EnhancedInputUserSettings.h"
 
 void UOWGameFeatureAction_AddInputConfig::OnGameFeatureActivating(FGameFeatureActivatingContext& Context)
 {
 	FPerContextData& ActiveData = ContextData.FindOrAdd(Context);
-	if (!ensure(ActiveData.ExtensionRequestHandles.IsEmpty()) || !ensure(ActiveData.PawnsAddedTo.IsEmpty()))
+	if (!ensure(ActiveData.ExtensionRequestHandles.IsEmpty()) || !ensure(ActiveData.ControllersAddedTo.IsEmpty()))
 	{
 		Reset(ActiveData);
 	}
@@ -37,9 +40,9 @@ void UOWGameFeatureAction_AddInputConfig::AddToWorld(const FWorldContext& InWorl
 		if (UGameFrameworkComponentManager* ComponentManager = UGameInstance::GetSubsystem<UGameFrameworkComponentManager>(GameInstance))
 		{
 			UGameFrameworkComponentManager::FExtensionHandlerDelegate AddConfigDelegate =
-				UGameFrameworkComponentManager::FExtensionHandlerDelegate::CreateUObject(this, &ThisClass::HandlePawnExtension, InChangeContext);
+				UGameFrameworkComponentManager::FExtensionHandlerDelegate::CreateUObject(this, &ThisClass::HandleControllerExtension, InChangeContext);
 
-			TSharedPtr<FComponentRequestHandle> ExtensionRequestHandle = ComponentManager->AddExtensionHandler(APawn::StaticClass(), AddConfigDelegate);
+			TSharedPtr<FComponentRequestHandle> ExtensionRequestHandle = ComponentManager->AddExtensionHandler(APlayerController::StaticClass(), AddConfigDelegate);
 			ActiveData.ExtensionRequestHandles.Add(ExtensionRequestHandle);
 		}
 	}
@@ -49,91 +52,93 @@ void UOWGameFeatureAction_AddInputConfig::Reset(FPerContextData& InActiveData)
 {
 	InActiveData.ExtensionRequestHandles.Empty();
 
-	while (!InActiveData.PawnsAddedTo.IsEmpty())
+	while (!InActiveData.ControllersAddedTo.IsEmpty())
 	{
-		TWeakObjectPtr<APawn> PawnPtr = InActiveData.PawnsAddedTo.Top();
-		if (PawnPtr.IsValid())
+		TWeakObjectPtr<APlayerController> ControllerPtr = InActiveData.ControllersAddedTo.Top();
+		if (ControllerPtr.IsValid())
 		{
-			RemoveInputConfig(PawnPtr.Get(), InActiveData);
+			RemoveInputMapping(ControllerPtr.Get(), InActiveData);
 		}
 		else
 		{
-			InActiveData.PawnsAddedTo.Pop();
+			InActiveData.ControllersAddedTo.Pop();
 		}
 	}
 }
 
-void UOWGameFeatureAction_AddInputConfig::AddInputConfig(APawn* InPawn, FPerContextData& InActiveData)
+void UOWGameFeatureAction_AddInputConfig::AddInputMappingForPlayer(ULocalPlayer* InLocalPlayer, APlayerController* InPlayerController, FPerContextData& InActiveData)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(InPawn->GetController());
-	if (ULocalPlayer* LocalPlayer = PlayerController ? PlayerController->GetLocalPlayer() : nullptr)
+	if (!InLocalPlayer || !InPlayerController)
+	{
+		return;
+	}
+
+	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = InLocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	if (!InputSubsystem)
+	{
+		return;
+	}
+
+	FModifyContextOptions Options;
+	Options.bIgnoreAllPressedKeysUntilRelease = false;
+
+	for (const FOWInputMappingContextAndPriority& Mapping : InputMappings)
+	{
+		if (UInputMappingContext* InputMapping = Mapping.InputMapping.LoadSynchronous())
+		{
+			if (Mapping.bRegisterWithSettings)
+			{
+				if (UEnhancedInputUserSettings* Settings = InputSubsystem->GetUserSettings())
+				{
+					Settings->RegisterInputMappingContext(InputMapping);
+				}
+			}
+
+			InputSubsystem->AddMappingContext(InputMapping, Mapping.Priority, Options);
+		}
+	}
+
+	InActiveData.ControllersAddedTo.AddUnique(InPlayerController);
+}
+
+void UOWGameFeatureAction_AddInputConfig::RemoveInputMapping(APlayerController* InPlayerController, FPerContextData& InActiveData)
+{
+	if (ULocalPlayer* LocalPlayer = InPlayerController ? InPlayerController->GetLocalPlayer() : nullptr)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
-			FModifyContextOptions Options;
-			Options.bIgnoreAllPressedKeysUntilRelease = false;
-
-			for (const FOWMappableConfigPair& Pair : InputConfigs)
+			for (const FOWInputMappingContextAndPriority& Mapping : InputMappings)
 			{
-				if (!Pair.bShouldActivateAutomatically)
+				if (const UInputMappingContext* InputMapping = Mapping.InputMapping.Get())
 				{
-					continue;
-				}
+					InputSubsystem->RemoveMappingContext(InputMapping);
 
-				if (const UPlayerMappableInputConfig* PlayerMappableConfig = Pair.Config.LoadSynchronous())
-				{
-					for (const TPair<TObjectPtr<UInputMappingContext>, int32>& MappingPair : PlayerMappableConfig->GetMappingContexts())
+					if (Mapping.bRegisterWithSettings)
 					{
-						if (MappingPair.Key)
+						if (UEnhancedInputUserSettings* Settings = InputSubsystem->GetUserSettings())
 						{
-							InputSubsystem->AddMappingContext(MappingPair.Key, MappingPair.Value, Options);
+							Settings->UnregisterInputMappingContext(InputMapping);
 						}
 					}
 				}
 			}
-
-			InActiveData.PawnsAddedTo.AddUnique(InPawn);
 		}
 	}
+
+	InActiveData.ControllersAddedTo.Remove(InPlayerController);
 }
 
-void UOWGameFeatureAction_AddInputConfig::RemoveInputConfig(APawn* InPawn, FPerContextData& InActiveData)
+void UOWGameFeatureAction_AddInputConfig::HandleControllerExtension(AActor* InActor, FName InEventName, FGameFeatureStateChangeContext InChangeContext)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(InPawn->GetController());
-	if (ULocalPlayer* LocalPlayer = PlayerController ? PlayerController->GetLocalPlayer() : nullptr)
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			for (const FOWMappableConfigPair& Pair : InputConfigs)
-			{
-				if (const UPlayerMappableInputConfig* PlayerMappableConfig = Pair.Config.LoadSynchronous())
-				{
-					for (const TPair<TObjectPtr<UInputMappingContext>, int32>& MappingPair : PlayerMappableConfig->GetMappingContexts())
-					{
-						if (MappingPair.Key)
-						{
-							InputSubsystem->RemoveMappingContext(MappingPair.Key);
-						}
-					}
-				}
-			}
-
-			InActiveData.PawnsAddedTo.Remove(InPawn);
-		}
-	}
-}
-
-void UOWGameFeatureAction_AddInputConfig::HandlePawnExtension(AActor* InActor, FName InEventName, FGameFeatureStateChangeContext InChangeContext)
-{
-	APawn* Pawn = CastChecked<APawn>(InActor);
+	APlayerController* PlayerController = CastChecked<APlayerController>(InActor);
 	FPerContextData& ActiveData = ContextData.FindOrAdd(InChangeContext);
 
 	if (InEventName == UGameFrameworkComponentManager::NAME_ExtensionAdded || InEventName == UOWHeroComponent::NAME_BindInputsNow)
 	{
-		AddInputConfig(Pawn, ActiveData);
+		AddInputMappingForPlayer(PlayerController->GetLocalPlayer(), PlayerController, ActiveData);
 	}
-	else if (InEventName == UGameFrameworkComponentManager::NAME_ExtensionRemoved)
+	else if (InEventName == UGameFrameworkComponentManager::NAME_ExtensionRemoved || InEventName == UGameFrameworkComponentManager::NAME_ReceiverRemoved)
 	{
-		RemoveInputConfig(Pawn, ActiveData);
+		RemoveInputMapping(PlayerController, ActiveData);
 	}
 }

@@ -6,6 +6,10 @@
 
 class UOWPawnData;
 
+/**
+ * PawnData, Controller, PlayerState, 입력 컴포넌트 준비 상태를 하나의 InitState 흐름으로 묶는 조율자다.
+ * Pawn 자체가 직접 게임 규칙을 해석하지 않도록, 다른 PawnComponent들이 이 상태 체인을 기준으로 초기화된다.
+ */
 UCLASS()
 class OVERWATCH_API UOWPawnExtensionComponent : public UPawnComponent, public IGameFrameworkInitStateInterface
 {
@@ -14,13 +18,16 @@ class OVERWATCH_API UOWPawnExtensionComponent : public UPawnComponent, public IG
 public:
 	UOWPawnExtensionComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	/** GameFrameworkComponentManager에 등록되는 이 컴포넌트의 기능 이름 */
 	static const FName NAME_ActorFeatureName;
 
+	/** 지정 Actor에 붙어 있는 PawnExtensionComponent를 찾는다. */
 	static UOWPawnExtensionComponent* FindPawnExtensionComponent(const AActor* InActor)
 	{
 		return InActor ? InActor->FindComponentByClass<UOWPawnExtensionComponent>() : nullptr;
 	}
 
+	/** 현재 PawnData를 호출자가 기대하는 구체 타입으로 조회한다. */
 	template <class T>
 	const T* GetPawnData() const
 	{
@@ -44,6 +51,7 @@ protected:
 	UFUNCTION()
 	void OnRep_PawnData();
 
+	/** 이 Pawn의 클래스, 입력, 카메라 기본값을 정의하는 복제 데이터 */
 	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_PawnData, Category = "OW|Pawn")
 	TObjectPtr<const UOWPawnData> PawnData;
 };

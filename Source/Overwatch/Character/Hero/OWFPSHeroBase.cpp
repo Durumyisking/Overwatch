@@ -19,12 +19,6 @@ AOWFPSHeroBase::AOWFPSHeroBase()
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
-	CameraComponent = CreateDefaultSubobject<UOWCameraComponent>(TEXT("First Person Camera"));
-	CameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	CameraComponent->bUsePawnControlRotation = true;
-	CameraComponent->bEnableFirstPersonFieldOfView = true;
-	CameraComponent->bEnableFirstPersonScale = true;
-
 	WeaponMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Mesh"));
 	WeaponMeshComponent->SetupAttachment(FirstPersonMesh);
 	WeaponMeshComponent->SetOnlyOwnerSee(true);
