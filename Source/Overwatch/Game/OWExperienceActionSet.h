@@ -17,4 +17,8 @@ public:
 	/** 이 액션 세트가 로드/활성화/비활성화 과정에서 실행할 액션 목록 */
 	UPROPERTY(EditAnywhere, Category = "Actions")
 	TArray<TObjectPtr<UGameFeatureAction>> Actions;
+
+	/** 이 액션 세트가 함께 활성화할 GameFeature 플러그인 목록 */
+	UPROPERTY(EditAnywhere, Category = "Gameplay")
+	TArray<FString> GameFeaturesToEnable;
 };

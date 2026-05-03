@@ -22,6 +22,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UOWAbilitySystemComponent* GetAbilitySystemComponent() const;
+	UOWAbilitySystemComponent* GetOWAbilitySystemComponent() const;
 
 	/** 현재 플레이어에게 적용된 PawnData를 호출자가 기대하는 구체 타입으로 조회한다. */
 	template <class T>
@@ -34,11 +35,14 @@ public:
 	void SetPawnData(const UOWPawnData* InPawnData);
 
 protected:
+	UFUNCTION()
+	void OnRep_PawnData();
+
 	/** 플레이어 캐릭터가 사용하는 AbilitySystemComponent 서브오브젝트 */
 	UPROPERTY(VisibleAnywhere, Category = "OW|PlayerState")
 	TObjectPtr<UOWAbilitySystemComponent> AbilitySystemComponent;
 
 	/** Experience 또는 선택 흐름에서 결정된 Pawn 구성 데이터 */
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_PawnData)
 	TObjectPtr<const UOWPawnData> PawnData;
 };

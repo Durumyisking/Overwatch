@@ -69,9 +69,9 @@ void UOWAbilitySet::GiveAbilitySystem(UOWAbilitySystemComponent* InASC, FOWAbili
 
 		// FGameplayAbilitySpec는 AbilityCDO능력을 부여할건데 어떤 정보를 가지고 부여할것인지 정의
 		// AbilitySpec은 GiveAbility로 전달되어 ActivatableAbilities에 추가된다.
-		FGameplayAbilitySpec Spec(AbilityCDO);
+		FGameplayAbilitySpec Spec(AbilityCDO, AbilityToGrant.AbilityLevel);
 		Spec.SourceObject = SourceObject;
-		Spec.DynamicAbilityTags.AddTag(AbilityToGrant.InputTag); // 이 능력은 어떤 태그랑 매치시킬거야~ 라고 명시
+		Spec.GetDynamicSpecSourceTags().AddTag(AbilityToGrant.InputTag); // 이 능력은 어떤 태그랑 매치시킬거야~ 라고 명시
 
 
 		// 여담으로 언리얼에서는 항상 Handle을 사용한다.

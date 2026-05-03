@@ -24,9 +24,9 @@ struct FOWAbilitySet_GameplayAbility
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag;
 
-	// Ability의 금지 조건
+	// 부여할 Ability 레벨
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FGameplayTag> BlockedTag;
+	int32 AbilityLevel = 1;
 };
 
 

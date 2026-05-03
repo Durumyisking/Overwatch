@@ -17,10 +17,6 @@ public:
 	AOWFPSHeroBase();
 
 protected:
-	virtual void PossessedBy(AController* InNewController) override;
-	virtual void OnRep_PlayerState() override;
-
-private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> FirstPersonMesh;
 

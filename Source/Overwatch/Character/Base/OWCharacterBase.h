@@ -22,6 +22,10 @@ public:
 	AOWCharacterBase();
 
 protected:
+	virtual void PossessedBy(AController* InNewController) override;
+	virtual void UnPossessed() override;
+	virtual void OnRep_Controller() override;
+	virtual void OnRep_PlayerState() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InInputComponent) override;
 
 public:

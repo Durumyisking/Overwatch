@@ -5,6 +5,7 @@
 #include "OWPawnExtensionComponent.generated.h"
 
 class UOWPawnData;
+class UOWAbilitySystemComponent;
 
 /**
  * PawnData, Controller, PlayerState, 입력 컴포넌트 준비 상태를 하나의 InitState 흐름으로 묶는 조율자다.
@@ -35,7 +36,14 @@ public:
 	}
 
 	void SetPawnData(const UOWPawnData* InPawnData);
+	UOWAbilitySystemComponent* GetOWAbilitySystemComponent() const { return AbilitySystemComponent; }
+	void InitializeAbilitySystem(UOWAbilitySystemComponent* InASC, AActor* InOwnerActor);
+	void UninitializeAbilitySystem();
+	void HandleControllerChanged();
+	void HandlePlayerStateReplicated();
 	void SetupPlayerInputComponent();
+	void OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate InDelegate);
+	void OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate InDelegate);
 
 	virtual void OnRegister() override;
 	virtual void BeginPlay() override;
@@ -54,4 +62,10 @@ protected:
 	/** 이 Pawn의 클래스, 입력, 카메라 기본값을 정의하는 복제 데이터 */
 	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_PawnData, Category = "OW|Pawn")
 	TObjectPtr<const UOWPawnData> PawnData;
+
+	UPROPERTY()
+	TObjectPtr<UOWAbilitySystemComponent> AbilitySystemComponent;
+
+	FSimpleMulticastDelegate OnAbilitySystemInitialized;
+	FSimpleMulticastDelegate OnAbilitySystemUninitialized;
 };

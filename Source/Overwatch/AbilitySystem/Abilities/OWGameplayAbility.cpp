@@ -5,4 +5,8 @@
 
 
 
+UOWGameplayAbility::UOWGameplayAbility(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
 

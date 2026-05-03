@@ -1,5 +1,6 @@
 #include "OWPlayerState.h"
 
+#include "AbilitySystem/OWAbilitySet.h"
 #include "AbilitySystem/OWAbilitySystemComponent.h"
 #include "Data/OWPawnData.h"
 #include "Game/OWExperienceDefinition.h"
@@ -18,12 +19,16 @@ void AOWPlayerState::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	const AGameStateBase* GameState = GetWorld() ? GetWorld()->GetGameState() : nullptr;
-	if (GameState)
+	UWorld* World = GetWorld();
+	if (World && World->IsGameWorld() && World->GetNetMode() != NM_Client)
 	{
-		if (UOWExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<UOWExperienceManagerComponent>())
+		const AGameStateBase* GameState = World->GetGameState();
+		if (GameState)
 		{
-			ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnOWExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+			if (UOWExperienceManagerComponent* ExperienceManagerComponent = GameState->FindComponentByClass<UOWExperienceManagerComponent>())
+			{
+				ExperienceManagerComponent->CallOrRegister_OnExperienceLoaded(FOnOWExperienceLoaded::FDelegate::CreateUObject(this, &ThisClass::OnExperienceLoaded));
+			}
 		}
 	}
 
@@ -33,6 +38,8 @@ void AOWPlayerState::PostInitializeComponents()
 		return;
 	}
 
+	// 처음 InitAbilityActorInfo를 호출하면 OwnerActor와 AvatarActor가 모두 PlayerState가 된다.
+	// 이후 PawnExtensionComponent가 Pawn을 AvatarActor로 다시 연결한다.
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 }
 
@@ -45,6 +52,11 @@ void AOWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 UOWAbilitySystemComponent* AOWPlayerState::GetAbilitySystemComponent() const
 {
+	return GetOWAbilitySystemComponent();
+}
+
+UOWAbilitySystemComponent* AOWPlayerState::GetOWAbilitySystemComponent() const
+{
 	return AbilitySystemComponent;
 }
 
@@ -56,6 +68,7 @@ void AOWPlayerState::OnExperienceLoaded(const UOWExperienceDefinition* InCurrent
 		return;
 	}
 
+	// GameMode의 GetPawnDataForController를 통해 PlayerState override 또는 Experience 기본 PawnData를 가져온다.
 	const UOWPawnData* NewPawnData = GameMode->GetPawnDataForController(GetOwningController());
 	if (NewPawnData)
 	{
@@ -65,10 +78,26 @@ void AOWPlayerState::OnExperienceLoaded(const UOWExperienceDefinition* InCurrent
 
 void AOWPlayerState::SetPawnData(const UOWPawnData* InPawnData)
 {
-	if (!InPawnData || PawnData)
+	if (!InPawnData || GetLocalRole() != ROLE_Authority || PawnData)
 	{
 		return;
 	}
 
 	PawnData = InPawnData;
+
+	// PawnData의 AbilitySet을 순회하며 ASC에 Ability를 부여한다.
+	// 이 단계에서 ASC의 ActivatableAbilities에 GameplayAbilitySpec이 추가된다.
+	for (UOWAbilitySet* AbilitySet : PawnData->AbilitySets)
+	{
+		if (AbilitySet)
+		{
+			AbilitySet->GiveAbilitySystem(AbilitySystemComponent, nullptr);
+		}
+	}
+
+	ForceNetUpdate();
+}
+
+void AOWPlayerState::OnRep_PawnData()
+{
 }

@@ -2,12 +2,10 @@
 
 #include "Character/Hero/OWFPSHeroBase.h"
 
-#include "AbilitySystem/OWAbilitySystemComponent.h"
 #include "Camera/OWCameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Player/OWPlayerState.h"
 
 AOWFPSHeroBase::AOWFPSHeroBase()
 {
@@ -32,36 +30,4 @@ AOWFPSHeroBase::AOWFPSHeroBase()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
-}
-
-void AOWFPSHeroBase::PossessedBy(AController* InNewController)
-{
-	Super::PossessedBy(InNewController);
-
-	AOWPlayerState* OWPlayerState = GetPlayerState<AOWPlayerState>();
-	if (!OWPlayerState)
-	{
-		return;
-	}
-
-	if (UOWAbilitySystemComponent* AbilitySystemComponent = OWPlayerState->GetAbilitySystemComponent())
-	{
-		AbilitySystemComponent->InitAbilityActorInfo(OWPlayerState, this);
-	}
-}
-
-void AOWFPSHeroBase::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	AOWPlayerState* OWPlayerState = GetPlayerState<AOWPlayerState>();
-	if (!OWPlayerState)
-	{
-		return;
-	}
-
-	if (UOWAbilitySystemComponent* AbilitySystemComponent = OWPlayerState->GetAbilitySystemComponent())
-	{
-		AbilitySystemComponent->InitAbilityActorInfo(OWPlayerState, this);
-	}
 }

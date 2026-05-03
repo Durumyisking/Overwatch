@@ -9,6 +9,7 @@ FGameplayTag FOWGameplayTags::InputTag_Jump;
 FGameplayTag FOWGameplayTags::InputTag_Move;
 FGameplayTag FOWGameplayTags::InputTag_Look;
 FGameplayTag FOWGameplayTags::InputTag_Look_Mouse;
+FGameplayTag FOWGameplayTags::InputTag_Look_Stick;
 FGameplayTag FOWGameplayTags::InputTag_Shoot;
 FGameplayTag FOWGameplayTags::InputTag_Reload;
 FGameplayTag FOWGameplayTags::InputTag_Ability_Skill1;
@@ -65,6 +66,7 @@ void FOWGameplayTags::AddAllTags()
 	AddTag(InputTag_Move, "InputTag.Move", "Input for movement.");
 	AddTag(InputTag_Look, "InputTag.Look", "Input for gamepad or generic look.");
 	AddTag(InputTag_Look_Mouse, "InputTag.Look.Mouse", "Input for mouse look.");
+	AddTag(InputTag_Look_Stick, "InputTag.Look.Stick", "Input for stick look.");
 	AddTag(InputTag_Shoot, "InputTag.Combat.Shoot", "Input for primary fire.");
 	AddTag(InputTag_Reload, "InputTag.Combat.Reload", "Input for reload.");
 	AddTag(InputTag_Ability_Skill1, "InputTag.Ability.Skill1", "Input for hero ability slot 1.");
@@ -96,6 +98,11 @@ const FGameplayTag& FOWGameplayTags::GetInputTagLook()
 const FGameplayTag& FOWGameplayTags::GetInputTagLookMouse()
 {
 	return InputTag_Look_Mouse;
+}
+
+const FGameplayTag& FOWGameplayTags::GetInputTagLookStick()
+{
+	return InputTag_Look_Stick;
 }
 
 const FGameplayTag& FOWGameplayTags::GetInputTagShoot()

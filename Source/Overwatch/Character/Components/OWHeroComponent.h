@@ -6,6 +6,7 @@
 #include "OWHeroComponent.generated.h"
 
 struct FInputActionValue;
+class UOWInputConfig;
 class UOWCameraMode;
 
 /**
@@ -37,11 +38,22 @@ public:
 	virtual void CheckDefaultInitialization() override;
 
 	TSubclassOf<UOWCameraMode> DetermineCameraMode() const;
+	void AddAdditionalInputConfig(const UOWInputConfig* InInputConfig);
+	void RemoveAdditionalInputConfig(const UOWInputConfig* InInputConfig);
+	bool IsReadyToBindInputs() const;
 	void InitializePlayerInput(UInputComponent* InPlayerInputComponent);
 	void Input_Move(const FInputActionValue& InInputActionValue);
 	void Input_LookMouse(const FInputActionValue& InInputActionValue);
+	void Input_LookStick(const FInputActionValue& InInputActionValue);
+	void Input_Crouch(const FInputActionValue& InInputActionValue);
+	void Input_AbilityInputTagPressed(FGameplayTag InInputTag);
+	void Input_AbilityInputTagReleased(FGameplayTag InInputTag);
 
 	/** 로컬 플레이어 EnhancedInput에 기본으로 등록할 입력 매핑 */
 	UPROPERTY(EditAnywhere, Category = "OW|Input")
 	TArray<FOWInputMappingContextAndPriority> DefaultInputMappings;
+
+private:
+	TMap<const UOWInputConfig*, TArray<uint32>> AdditionalInputConfigBindHandles;
+	bool bReadyToBindInputs = false;
 };

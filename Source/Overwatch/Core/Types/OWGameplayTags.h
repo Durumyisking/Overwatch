@@ -13,6 +13,7 @@ struct OVERWATCH_API FOWGameplayTags
 	static const FGameplayTag& GetInputTagMove();
 	static const FGameplayTag& GetInputTagLook();
 	static const FGameplayTag& GetInputTagLookMouse();
+	static const FGameplayTag& GetInputTagLookStick();
 	static const FGameplayTag& GetInputTagShoot();
 	static const FGameplayTag& GetInputTagReload();
 	static const FGameplayTag& GetInputTagAbilitySkill1();
@@ -39,6 +40,7 @@ private:
 	static FGameplayTag InputTag_Move;
 	static FGameplayTag InputTag_Look;
 	static FGameplayTag InputTag_Look_Mouse;
+	static FGameplayTag InputTag_Look_Stick;
 	static FGameplayTag InputTag_Shoot;
 	static FGameplayTag InputTag_Reload;
 	static FGameplayTag InputTag_Ability_Skill1;

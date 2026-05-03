@@ -5,6 +5,7 @@
 
 class UOWInputConfig;
 class UOWCameraMode;
+class UOWAbilitySet;
 
 /**
  * Pawn을 정의하는 불변 데이터 에셋이다.
@@ -29,4 +30,8 @@ public:
 	/** 플레이어 Pawn의 입력 매핑과 액션 바인딩에 사용할 입력 설정 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OW|Input")
 	TObjectPtr<UOWInputConfig> InputConfig;
+
+	/** 이 PawnData가 PlayerState의 ASC에 부여할 AbilitySet 목록 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OW|Abilities")
+	TArray<TObjectPtr<UOWAbilitySet>> AbilitySets;
 };

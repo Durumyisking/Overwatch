@@ -41,10 +41,21 @@ void UOWExperienceManagerComponent::StartExperienceLoad()
 
 	UOWAssetManager& AssetManager = UOWAssetManager::Get();
 	TSet<FPrimaryAssetId> BundleAssetList;
+
+	// Experience와 ActionSet은 둘 다 PrimaryDataAsset이므로 Bundle 로딩 대상에 포함한다.
 	BundleAssetList.Add(CurrentExperience->GetPrimaryAssetId());
+	for (const TObjectPtr<UOWExperienceActionSet>& ActionSet : CurrentExperience->ActionSets)
+	{
+		if (ActionSet)
+		{
+			BundleAssetList.Add(ActionSet->GetPrimaryAssetId());
+		}
+	}
 
 	TArray<FName> BundlesToLoad;
 	const ENetMode OwnerNetMode = GetOwner()->GetNetMode();
+
+	// Standalone/Editor에서는 Client, Server 번들을 모두 로드한다.
 	if (GIsEditor || (OwnerNetMode != NM_DedicatedServer))
 	{
 		BundlesToLoad.Add(UGameFeaturesSubsystemSettings::LoadStateClient);
@@ -66,6 +77,7 @@ void UOWExperienceManagerComponent::StartExperienceLoad()
 
 	if (!Handle.IsValid() || Handle->HasLoadCompleted())
 	{
+		// 비동기 핸들이 없거나 이미 완료되었으면 완료 delegate를 즉시 실행한다.
 		FStreamableHandle::ExecuteDelegate(OnAssetsLoadedDelegate);
 		return;
 	}
@@ -96,7 +108,15 @@ void UOWExperienceManagerComponent::OnExperienceLoadComplete()
 		}
 	};
 
+	// Experience 본체와 ActionSet이 요구하는 GameFeature Plugin을 모두 수집한다.
 	CollectGameFeaturePluginURLs(CurrentExperience->GameFeaturesToEnable);
+	for (const TObjectPtr<UOWExperienceActionSet>& ActionSet : CurrentExperience->ActionSets)
+	{
+		if (ActionSet)
+		{
+			CollectGameFeaturePluginURLs(ActionSet->GameFeaturesToEnable);
+		}
+	}
 
 	NumGameFeaturePluginsLoading = GameFeaturePluginURLs.Num();
 	if (NumGameFeaturePluginsLoading <= 0)
@@ -130,6 +150,7 @@ void UOWExperienceManagerComponent::OnExperienceFullLoadCompleted()
 	FGameFeatureActivatingContext Context;
 	if (const FWorldContext* ExistingWorldContext = GEngine->GetWorldContextFromWorld(GetWorld()))
 	{
+		// 현재 Experience가 로드된 World에만 GameFeatureAction을 적용한다.
 		Context.SetRequiredWorldContextHandle(ExistingWorldContext->ContextHandle);
 	}
 
@@ -142,6 +163,7 @@ void UOWExperienceManagerComponent::OnExperienceFullLoadCompleted()
 				continue;
 			}
 
+			// Experience가 직접 보유한 Action은 GameFeature 플러그인 밖에서 실행되므로 생명주기를 수동으로 호출한다.
 			Action->OnGameFeatureRegistering();
 			Action->OnGameFeatureLoading();
 			Action->OnGameFeatureActivating(Context);
