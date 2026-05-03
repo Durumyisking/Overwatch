@@ -57,3 +57,39 @@ void UCommonSessionSubsystem::HostSession(APlayerController* HostingPlayer, UCom
 	// HostSessionRequest에서 MapID와 ExtraArgs를 통해 URL을 생성하여, MapLoad를 시작한다
 	GetWorld()->ServerTravel(Request->ConstructTravelURL());
 }
+
+//
+//void UCommonSessionSubsystem::JoinSession(APlayerController* JoiningPlayer, UCommonSession_SearchResult* Request)
+//{
+//
+//	if (Request == nullptr)
+//	{
+//		UE_LOG(LogCommonSession, Error, TEXT("JoinSession passed a null request"));
+//		return;
+//	}
+//
+//	ULocalPlayer* LocalPlayer = (JoiningPlayer != nullptr) ? JoiningPlayer->GetLocalPlayer() : nullptr;
+//	if (LocalPlayer == nullptr)
+//	{
+//		UE_LOG(LogCommonSession, Error, TEXT("JoiningPlayer is invalid"));
+//		return;
+//	}
+//
+//	// Update presence here since we won't have the raw game mode and map name keys after client travel. If joining/travel fails, it is reset to main menu 
+//	FString SessionGameMode, SessionMapName;
+//	bool bEmpty;
+//#if COMMONUSER_OSSV1
+//	Request->GetStringSetting(SETTING_GAMEMODE, SessionGameMode, bEmpty);
+//	Request->GetStringSetting(SETTING_MAPNAME, SessionMapName, bEmpty);
+//	NotifySessionInformationUpdated(ECommonSessionInformationState::InGame, SessionGameMode, SessionMapName);
+//#else
+//	if (Request->Lobby.IsValid())
+//	{
+//		Request->GetStringSetting(SETTING_GAMEMODE, SessionGameMode, bEmpty);
+//		Request->GetStringSetting(SETTING_MAPNAME, SessionMapName, bEmpty);
+//		NotifySessionInformationUpdated(ECommonSessionInformationState::InGame, SessionGameMode, SessionMapName);
+//	}
+//#endif // COMMONUSER_OSSV1
+//
+//	JoinSessionInternal(LocalPlayer, Request);
+//}
