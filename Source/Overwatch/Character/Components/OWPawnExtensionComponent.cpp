@@ -85,7 +85,16 @@ void UOWPawnExtensionComponent::UninitializeAbilitySystem()
 	{
 		// 이 Pawn이 아직 ASC의 AvatarActor라면 입력 상태를 비우고 Avatar 연결을 끊는다.
 		AbilitySystemComponent->ClearAbilityInput();
-		AbilitySystemComponent->SetAvatarActor(nullptr);
+
+		if (AbilitySystemComponent->GetOwnerActor() != nullptr)
+		{
+			AbilitySystemComponent->SetAvatarActor(nullptr);
+		}
+		else
+		{
+			// If the ASC doesn't have a valid owner, we need to clear *all* actor info, not just the avatar pairing
+			AbilitySystemComponent->ClearActorInfo();
+		}
 
 		// OnAbilitySystemUninitialized에 바인딩된 Delegate를 호출한다.
 		OnAbilitySystemUninitialized.Broadcast();
