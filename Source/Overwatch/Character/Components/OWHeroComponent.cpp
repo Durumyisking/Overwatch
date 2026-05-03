@@ -13,6 +13,7 @@
 #include "Input/OWInputConfig.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Controller.h"
+#include "OWLog.h"
 #include "Player/OWPlayerState.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
 
@@ -169,6 +170,15 @@ void UOWHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* InM
 
 	if (Pawn->IsLocallyControlled() && PawnData)
 	{
+		OW_LOG(LogOWGame, Log, TEXT("Hero input init gate passed. Pawn=%s Controller=%s PlayerState=%s PawnData=%s InputComponent=%s InputConfig=%s DefaultMappings=%d"),
+			*GetNameSafe(Pawn),
+			*GetNameSafe(Pawn->GetController()),
+			*GetNameSafe(PlayerState),
+			*GetNameSafe(PawnData),
+			*GetNameSafe(Pawn->InputComponent),
+			*GetNameSafe(PawnData->InputConfig),
+			DefaultInputMappings.Num());
+
 		// 현재 Pawn에 붙은 CameraComponent를 찾아 PawnData의 기본 CameraMode를 결정하도록 delegate를 연결한다.
 		if (UOWCameraComponent* CameraComponent = UOWCameraComponent::FindCameraComponent(Pawn))
 		{
@@ -179,6 +189,17 @@ void UOWHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* InM
 		{
 			InitializePlayerInput(Pawn->InputComponent);
 		}
+		else
+		{
+			OW_WARN(LogOWGame, TEXT("Hero input init skipped because Pawn InputComponent is null. Pawn=%s"), *GetNameSafe(Pawn));
+		}
+	}
+	else
+	{
+		OW_LOG(LogOWGame, Log, TEXT("Hero input init gate blocked. Pawn=%s bLocallyControlled=%s PawnData=%s"),
+			*GetNameSafe(Pawn),
+			Pawn && Pawn->IsLocallyControlled() ? TEXT("true") : TEXT("false"),
+			*GetNameSafe(PawnData));
 	}
 }
 
@@ -214,32 +235,49 @@ void UOWHeroComponent::InitializePlayerInput(UInputComponent* InPlayerInputCompo
 {
 	check(InPlayerInputComponent);
 
+	OW_LOG(LogOWGame, Log, TEXT("InitializePlayerInput entered. InputComponent=%s Class=%s"),
+		*GetNameSafe(InPlayerInputComponent),
+		*GetNameSafe(InPlayerInputComponent->GetClass()));
+
 	const APawn* Pawn = GetPawn<APawn>();
 	if (!Pawn)
 	{
+		OW_WARN(LogOWGame, TEXT("InitializePlayerInput aborted: Pawn is null."));
 		return;
 	}
 
 	const APlayerController* PlayerController = GetController<APlayerController>();
 	if (!PlayerController)
 	{
+		OW_WARN(LogOWGame, TEXT("InitializePlayerInput aborted: PlayerController is null. Pawn=%s Controller=%s"),
+			*GetNameSafe(Pawn),
+			*GetNameSafe(Pawn->GetController()));
 		return;
 	}
 
 	const ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
 	if (!LocalPlayer)
 	{
+		OW_WARN(LogOWGame, TEXT("InitializePlayerInput aborted: LocalPlayer is null. Pawn=%s PlayerController=%s"),
+			*GetNameSafe(Pawn),
+			*GetNameSafe(PlayerController));
 		return;
 	}
 
 	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!InputSubsystem)
 	{
+		OW_WARN(LogOWGame, TEXT("InitializePlayerInput aborted: EnhancedInputLocalPlayerSubsystem is null. LocalPlayer=%s"),
+			*GetNameSafe(LocalPlayer));
 		return;
 	}
 
 	// EnhancedInputLocalPlayerSubsystem의 기존 MappingContext를 비우고 PawnData 기준으로 다시 구성한다.
 	InputSubsystem->ClearAllMappings();
+	OW_LOG(LogOWGame, Log, TEXT("InitializePlayerInput cleared mappings. Pawn=%s PlayerController=%s DefaultMappings=%d"),
+		*GetNameSafe(Pawn),
+		*GetNameSafe(PlayerController),
+		DefaultInputMappings.Num());
 
 	// PawnExtensionComponent -> PawnData -> InputConfig 순서로 입력 설정을 찾는다.
 	if (const UOWPawnExtensionComponent* PawnExtensionComponent = UOWPawnExtensionComponent::FindPawnExtensionComponent(Pawn))
@@ -248,6 +286,7 @@ void UOWHeroComponent::InitializePlayerInput(UInputComponent* InPlayerInputCompo
 		{
 			if (const UOWInputConfig* InputConfig = PawnData->InputConfig)
 			{
+				int32 AddedMappingCount = 0;
 				FModifyContextOptions Options;
 				Options.bIgnoreAllPressedKeysUntilRelease = false;
 
@@ -265,10 +304,23 @@ void UOWHeroComponent::InitializePlayerInput(UInputComponent* InPlayerInputCompo
 						}
 
 						InputSubsystem->AddMappingContext(InputMapping, Mapping.Priority, Options);
+						++AddedMappingCount;
+					}
+					else
+					{
+						OW_WARN(LogOWGame, TEXT("InitializePlayerInput failed to load default InputMapping. Priority=%d"), Mapping.Priority);
 					}
 				}
 
-				UOWInputComponent* OWInputComponent = CastChecked<UOWInputComponent>(InPlayerInputComponent);
+				UOWInputComponent* OWInputComponent = Cast<UOWInputComponent>(InPlayerInputComponent);
+				if (!OWInputComponent)
+				{
+					OW_WARN(LogOWGame, TEXT("InitializePlayerInput aborted: InputComponent is not UOWInputComponent. InputComponent=%s Class=%s"),
+						*GetNameSafe(InPlayerInputComponent),
+						*GetNameSafe(InPlayerInputComponent->GetClass()));
+					return;
+				}
+
 				TArray<uint32> BindHandles;
 
 				// AbilityInputActions는 GameplayTag를 ASC에 전달하여 GameplayAbility가 직접 입력으로 활성화되게 한다.
@@ -279,11 +331,33 @@ void UOWHeroComponent::InitializePlayerInput(UInputComponent* InPlayerInputCompo
 				OWInputComponent->BindNativeAction(InputConfig, FOWGameplayTags::Get().GetInputTagLookMouse(), ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse, false);
 				OWInputComponent->BindNativeAction(InputConfig, FOWGameplayTags::Get().GetInputTagLookStick(), ETriggerEvent::Triggered, this, &ThisClass::Input_LookStick, false);
 				OWInputComponent->BindNativeAction(InputConfig, FOWGameplayTags::Get().GetInputTagCrouch(), ETriggerEvent::Triggered, this, &ThisClass::Input_Crouch, false);
+
+				OW_LOG(LogOWGame, Log, TEXT("InitializePlayerInput completed binding. PawnData=%s InputConfig=%s AddedMappings=%d AbilityBindHandles=%d NativeActions=%d"),
+					*GetNameSafe(PawnData),
+					*GetNameSafe(InputConfig),
+					AddedMappingCount,
+					BindHandles.Num(),
+					InputConfig->NativeInputActions.Num());
+			}
+			else
+			{
+				OW_WARN(LogOWGame, TEXT("InitializePlayerInput skipped binding: PawnData InputConfig is null. PawnData=%s"), *GetNameSafe(PawnData));
 			}
 		}
+		else
+		{
+			OW_WARN(LogOWGame, TEXT("InitializePlayerInput skipped binding: PawnExtension PawnData is null. Pawn=%s"), *GetNameSafe(Pawn));
+		}
+	}
+	else
+	{
+		OW_WARN(LogOWGame, TEXT("InitializePlayerInput skipped binding: PawnExtensionComponent is missing. Pawn=%s"), *GetNameSafe(Pawn));
 	}
 
 	bReadyToBindInputs = true;
+	OW_LOG(LogOWGame, Log, TEXT("InitializePlayerInput broadcasting BindInputsNow. Pawn=%s PlayerController=%s"),
+		*GetNameSafe(Pawn),
+		*GetNameSafe(PlayerController));
 
 	// GameFeatureAction_AddInputContextMapping/AddInputBinding의 확장 콜백을 호출한다.
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PlayerController), NAME_BindInputsNow);
