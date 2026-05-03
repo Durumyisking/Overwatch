@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ModularPlayerController.h"
 #include "GameFramework/PlayerController.h"
 #include "OWPlayerController.generated.h"
 
@@ -7,7 +8,7 @@ class AOWPlayerState;
 class UOWAbilitySystemComponent;
 
 UCLASS()
-class OVERWATCH_API AOWPlayerController : public APlayerController
+class OVERWATCH_API AOWPlayerController : public AModularPlayerController
 {
 	GENERATED_BODY()
 

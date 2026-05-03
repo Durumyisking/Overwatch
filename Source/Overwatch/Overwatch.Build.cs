@@ -22,8 +22,9 @@ public class Overwatch : ModuleRules
 			"EnhancedInput", 
 			"ModularGameplay",
 			"GameFeatures",
-			
-			"GameplayTags",
+			"ModularGameplayActors",
+
+            "GameplayTags",
 			"GameplayTasks",
 			"GameplayAbilities",
 
@@ -33,7 +34,7 @@ public class Overwatch : ModuleRules
 
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

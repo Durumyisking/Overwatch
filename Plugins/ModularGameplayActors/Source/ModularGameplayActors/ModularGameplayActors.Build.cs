@@ -26,6 +26,7 @@ public class ModularGameplayActors : ModuleRules
 			new string[]
 			{
 				"Core",
+				"ModularGameplay"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

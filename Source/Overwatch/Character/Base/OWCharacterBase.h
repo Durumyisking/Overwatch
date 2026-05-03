@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ModularCharacter.h"
 #include "GameFramework/Character.h"
 #include "OWCharacterBase.generated.h"
 
@@ -14,7 +15,7 @@ class UOWPawnExtensionComponent;
  * 새 게임플레이 동작은 가능하면 PawnComponent로 붙이고, 이 클래스는 Pawn 공통 컴포넌트 조립만 담당한다.
  */
 UCLASS(abstract)
-class OVERWATCH_API AOWCharacterBase : public ACharacter
+class OVERWATCH_API AOWCharacterBase : public AModularCharacter
 {
 	GENERATED_BODY()
 
