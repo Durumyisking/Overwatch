@@ -23,6 +23,7 @@ public class Overwatch : ModuleRules
 			"ModularGameplay",
 			"GameFeatures",
 			"ModularGameplayActors",
+			"NetCore",
 
             "GameplayTags",
 			"GameplayTasks",

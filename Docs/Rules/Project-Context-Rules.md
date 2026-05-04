@@ -25,5 +25,8 @@
 ## Suggested Reading Order
 - Inspect `Source/` first.
 - Inspect `Config/` second.
-- Check `Docs/Research/` only when the task touches Lyra adoption or Overwatch gameplay direction.
+- For concrete Overwatch project failures, inspect local project code, logs, and tests before broadening.
+- For non-project-specific Unreal, GAS, CommonUI, MVVM, or architecture questions, inspect Lyra code and notes before local project details.
+- Check `Docs/Research/` when the task touches Lyra adoption, Overwatch gameplay direction, or when Lyra-first comparison would save context.
+- Use the user's previously shared `x157 git.io` reference as a fallback explanation aid when the local explanation is not landing; verify the source before depending on specifics.
 - Broaden only after checking the directly affected module.
