@@ -9,6 +9,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
+#include "OWLog.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
 
 #if WITH_EDITOR
@@ -26,6 +27,8 @@ void UOWGameFeatureAction_AddInputContextMapping::OnGameFeatureRegistering()
 
 void UOWGameFeatureAction_AddInputContextMapping::OnGameFeatureActivating(FGameFeatureActivatingContext& Context)
 {
+	OW_LOG(LogOWGame, Log, TEXT("AddInputContextMapping activating. Mappings=%d"), InputMappings.Num());
+
 	FPerContextData& ActiveData = ContextData.FindOrAdd(Context);
 	if (!ensure(ActiveData.ExtensionRequestHandles.IsEmpty()) || !ensure(ActiveData.ControllersAddedTo.IsEmpty()))
 	{
@@ -192,6 +195,13 @@ void UOWGameFeatureAction_AddInputContextMapping::AddToWorld(const FWorldContext
 	UGameInstance* GameInstance = InWorldContext.OwningGameInstance;
 	FPerContextData& ActiveData = ContextData.FindOrAdd(InChangeContext);
 
+	OW_LOG(LogOWGame, Log, TEXT("AddInputContextMapping AddToWorld. World=%s NetMode=%s GameInstance=%s IsGameWorld=%s Mappings=%d"),
+		*GetNameSafe(World),
+		World ? FOWLog::GetNetModeString(World->GetNetMode()) : TEXT("NoWorld"),
+		*GetNameSafe(GameInstance),
+		World && World->IsGameWorld() ? TEXT("true") : TEXT("false"),
+		InputMappings.Num());
+
 	if (GameInstance && World && World->IsGameWorld())
 	{
 		// Controller 확장 이벤트는 LocalPlayer의 EnhancedInputSubsystem이 준비되는 시점을 알려준다.
@@ -230,6 +240,11 @@ void UOWGameFeatureAction_AddInputContextMapping::HandleControllerExtension(AAct
 	APlayerController* PlayerController = CastChecked<APlayerController>(InActor);
 	FPerContextData& ActiveData = ContextData.FindOrAdd(InChangeContext);
 
+	OW_LOG(LogOWGame, Log, TEXT("AddInputContextMapping HandleControllerExtension. Event=%s PC=%s LocalPlayer=%s"),
+		*InEventName.ToString(),
+		*GetNameSafe(PlayerController),
+		*GetNameSafe(PlayerController->GetLocalPlayer()));
+
 	if ((InEventName == UGameFrameworkComponentManager::NAME_ExtensionRemoved) || (InEventName == UGameFrameworkComponentManager::NAME_ReceiverRemoved))
 	{
 		RemoveInputMapping(PlayerController, ActiveData);
@@ -245,25 +260,43 @@ void UOWGameFeatureAction_AddInputContextMapping::AddInputMappingForPlayer(UPlay
 	ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(InPlayer);
 	if (!LocalPlayer)
 	{
+		OW_WARN(LogOWGame, TEXT("AddInputMappingForPlayer aborted: Player is not LocalPlayer. Player=%s"), *GetNameSafe(InPlayer));
 		return;
 	}
 
 	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!InputSubsystem)
 	{
+		OW_WARN(LogOWGame, TEXT("AddInputMappingForPlayer aborted: EnhancedInputLocalPlayerSubsystem is null. LocalPlayer=%s"), *GetNameSafe(LocalPlayer));
 		return;
 	}
 
 	FModifyContextOptions Options;
 	Options.bIgnoreAllPressedKeysUntilRelease = false;
 
+	int32 AddedMappingCount = 0;
 	for (const FOWInputMappingContextAndPriority& Mapping : InputMappings)
 	{
 		if (UInputMappingContext* InputMapping = Mapping.InputMapping.LoadSynchronous())
 		{
+			OW_LOG(LogOWGame, Log, TEXT("AddInputMappingForPlayer adding mapping. LocalPlayer=%s Mapping=%s Priority=%d RegisterWithSettings=%s"),
+				*GetNameSafe(LocalPlayer),
+				*GetNameSafe(InputMapping),
+				Mapping.Priority,
+				Mapping.bRegisterWithSettings ? TEXT("true") : TEXT("false"));
+
 			InputSubsystem->AddMappingContext(InputMapping, Mapping.Priority, Options);
+			++AddedMappingCount;
+		}
+		else
+		{
+			OW_WARN(LogOWGame, TEXT("AddInputMappingForPlayer failed to load InputMapping. Priority=%d"), Mapping.Priority);
 		}
 	}
+
+	OW_LOG(LogOWGame, Log, TEXT("AddInputMappingForPlayer completed. LocalPlayer=%s AddedMappings=%d"),
+		*GetNameSafe(LocalPlayer),
+		AddedMappingCount);
 
 	if (APlayerController* PlayerController = LocalPlayer->GetPlayerController(nullptr))
 	{

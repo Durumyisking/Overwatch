@@ -14,6 +14,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Controller.h"
 #include "OWLog.h"
+#include "Player/OWPlayerController.h"
 #include "Player/OWPlayerState.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
 
@@ -79,7 +80,6 @@ void UOWHeroComponent::OnActorInitStateChanged(const FActorInitStateChangedParam
 bool UOWHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* InManager, FGameplayTag InCurrentState, FGameplayTag InDesiredState) const
 {
 	check(InManager);
-
 	const FOWGameplayTags& GameplayTags = FOWGameplayTags::Get();
 	APawn* Pawn = GetPawn<APawn>();
 	AOWPlayerState* PlayerState = GetPlayerState<AOWPlayerState>();
@@ -102,19 +102,25 @@ bool UOWHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* InMana
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
 			AController* Controller = GetController<AController>();
-			const bool bHasControllerPairedWithPlayerState = Controller && Controller->PlayerState && Controller->PlayerState->GetOwner() == Controller;
-			if (!bHasControllerPairedWithPlayerState)
+
+			const bool bHasControllerPairedWithPS = (Controller != nullptr) && \
+				(Controller->PlayerState != nullptr) && \
+				(Controller->PlayerState->GetOwner() == Controller);
+
+			if (!bHasControllerPairedWithPS)
 			{
 				return false;
 			}
 		}
 
-		if (Pawn->IsLocallyControlled())
+		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
+		const bool bIsBot = Pawn->IsBotControlled();
+		if (bIsLocallyControlled && !bIsBot) // 실제 플레이어면
 		{
-			APlayerController* PlayerController = GetController<APlayerController>();
+			AOWPlayerController* OWPC = GetController<AOWPlayerController>();
 
 			// 로컬 제어 Pawn은 입력 컴포넌트와 LocalPlayer가 준비되어야 한다.
-			if (!Pawn->InputComponent || !PlayerController || !PlayerController->GetLocalPlayer())
+			if (!Pawn->InputComponent || !OWPC || !OWPC->GetLocalPlayer())
 			{
 				return false;
 			}
@@ -148,58 +154,38 @@ void UOWHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* InM
 
 	// DataAvailable -> DataInitialized 단계에서 Pawn은 Controller에 possess되어 준비된 상태다.
 	APawn* Pawn = GetPawn<APawn>();
-	if (!ensure(Pawn))
-	{
-		return;
-	}
-
 	AOWPlayerState* PlayerState = GetPlayerState<AOWPlayerState>();
-	if (!ensure(PlayerState))
+	if (!ensure(Pawn && PlayerState))
 	{
 		return;
 	}
 
 	const UOWPawnData* PawnData = nullptr;
+
 	if (UOWPawnExtensionComponent* PawnExtensionComponent = UOWPawnExtensionComponent::FindPawnExtensionComponent(Pawn))
 	{
 		PawnData = PawnExtensionComponent->GetPawnData<UOWPawnData>();
 
-		// PlayerState는 지속 데이터를 소유한다. ASC도 PlayerState에 있으므로 PawnExtension을 통해 현재 Pawn을 AvatarActor로 연결한다.
+		// PlayerState는 지속 데이터를 소유한다. (죽음과 여러 폰에 걸쳐 지속되는 상태)
+		// ASC도 PlayerState에 있으므로 PawnExtension을 통해 현재 Pawn을 AvatarActor로 연결한다.
 		PawnExtensionComponent->InitializeAbilitySystem(PlayerState->GetOWAbilitySystemComponent(), PlayerState);
 	}
 
-	if (Pawn->IsLocallyControlled() && PawnData)
+	if (AOWPlayerController* OWPC = GetController<AOWPlayerController>())
 	{
-		OW_LOG(LogOWGame, Log, TEXT("Hero input init gate passed. Pawn=%s Controller=%s PlayerState=%s PawnData=%s InputComponent=%s InputConfig=%s DefaultMappings=%d"),
-			*GetNameSafe(Pawn),
-			*GetNameSafe(Pawn->GetController()),
-			*GetNameSafe(PlayerState),
-			*GetNameSafe(PawnData),
-			*GetNameSafe(Pawn->InputComponent),
-			*GetNameSafe(PawnData->InputConfig),
-			DefaultInputMappings.Num());
+		if (Pawn->InputComponent != nullptr)
+		{
+			InitializePlayerInput(Pawn->InputComponent);
+		}
+	}
 
+	if (PawnData)
+	{
 		// 현재 Pawn에 붙은 CameraComponent를 찾아 PawnData의 기본 CameraMode를 결정하도록 delegate를 연결한다.
 		if (UOWCameraComponent* CameraComponent = UOWCameraComponent::FindCameraComponent(Pawn))
 		{
 			CameraComponent->DetermineCameraModeDelegate.BindUObject(this, &ThisClass::DetermineCameraMode);
 		}
-
-		if (Pawn->InputComponent)
-		{
-			InitializePlayerInput(Pawn->InputComponent);
-		}
-		else
-		{
-			OW_WARN(LogOWGame, TEXT("Hero input init skipped because Pawn InputComponent is null. Pawn=%s"), *GetNameSafe(Pawn));
-		}
-	}
-	else
-	{
-		OW_LOG(LogOWGame, Log, TEXT("Hero input init gate blocked. Pawn=%s bLocallyControlled=%s PawnData=%s"),
-			*GetNameSafe(Pawn),
-			Pawn && Pawn->IsLocallyControlled() ? TEXT("true") : TEXT("false"),
-			*GetNameSafe(PawnData));
 	}
 }
 
