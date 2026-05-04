@@ -27,6 +27,8 @@ class OVERWATCH_API UOWExperienceManagerComponent : public UGameStateComponent
 	GENERATED_BODY()
 
 public:
+	UOWExperienceManagerComponent(const FObjectInitializer& ObjectInitializer);
+
 	bool IsExperienceLoaded() const { return (LoadState == EOWExperienceLoadState::Loaded) && (CurrentExperience != nullptr); }
 
 	/** Experience가 이미 로드되었으면 즉시 호출하고, 아직이면 완료 델리게이트에 등록한다. */
@@ -38,8 +40,14 @@ public:
 	void OnExperienceFullLoadCompleted();
 	const UOWExperienceDefinition* GetCurrentExperienceChecked() const;
 
+public:
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+	UFUNCTION()
+	void OnRep_CurrentExperience();
+
 	/** 현재 로드 중이거나 로드 완료된 Experience */
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentExperience)
 	TObjectPtr<const UOWExperienceDefinition> CurrentExperience;
 
 	/** Experience의 로딩 상태를 모니터링 */

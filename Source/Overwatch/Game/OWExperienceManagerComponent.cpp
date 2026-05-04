@@ -6,6 +6,13 @@
 #include "GameFeatureAction.h"
 #include "GameFeaturesSubsystem.h"
 #include "GameFeaturesSubsystemSettings.h"
+#include "Net/UnrealNetwork.h"
+
+UOWExperienceManagerComponent::UOWExperienceManagerComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	SetIsReplicatedByDefault(true);
+}
 
 void UOWExperienceManagerComponent::CallOrRegister_OnExperienceLoaded(FOnOWExperienceLoaded::FDelegate&& Delegate)
 {
@@ -190,4 +197,16 @@ const UOWExperienceDefinition* UOWExperienceManagerComponent::GetCurrentExperien
 	check(LoadState == EOWExperienceLoadState::Loaded);
 	check(CurrentExperience != nullptr);
 	return CurrentExperience;
+}
+
+void UOWExperienceManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, CurrentExperience);
+}
+
+void UOWExperienceManagerComponent::OnRep_CurrentExperience()
+{
+	StartExperienceLoad();
 }
