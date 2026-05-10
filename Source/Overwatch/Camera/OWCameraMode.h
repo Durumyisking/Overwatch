@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "OWCameraMode.generated.h"
 
 class UOWCameraComponent;
@@ -51,6 +52,9 @@ public:
 
 	FOWCameraModeView View;
 
+	FGameplayTag GetCameraTypeTag() const { return CameraTypeTag; }
+	float GetBlendWeight() const { return BlendWeight; }
+
 	/** 이 모드가 목표로 하는 시야각 */
 	UPROPERTY(EditDefaultsOnly, Category = "View", Meta = (UIMin = "5.0", UIMax = "170.0", ClampMin = "5.0", ClampMax = "170.0"))
 	float FieldOfView;
@@ -77,6 +81,10 @@ public:
 
 	/** 이 모드가 사용할 블렌딩 함수 */
 	EOWCameraModeBlendFunction BlendFunction;
+
+	/** 조준처럼 gameplay code가 특정 카메라 상태를 태그로 질의할 수 있게 하는 분류 태그 */
+	UPROPERTY(EditDefaultsOnly, Category = "Blending")
+	FGameplayTag CameraTypeTag;
 };
 
 /**
@@ -95,6 +103,7 @@ public:
 	void EvaluateStack(float InDeltaTime, FOWCameraModeView& OutCameraModeView);
 	void UpdateStack(float InDeltaTime);
 	void BlendStack(FOWCameraModeView& OutCameraModeView) const;
+	void GetBlendInfo(float& OutWeightOfTopLayer, FGameplayTag& OutTagOfTopLayer) const;
 
 	/** 재사용을 위해 생성해 둔 카메라 모드 인스턴스 목록 */
 	UPROPERTY()

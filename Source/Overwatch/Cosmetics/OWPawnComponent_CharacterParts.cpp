@@ -168,6 +168,8 @@ bool FOWCharacterPartList::SpawnActorForEntry(FOWAppliedCharacterPartEntry& Entr
 
 				PartComponent->SetupAttachment(ComponentToAttachTo, Entry.Part.SocketName);
 				PartComponent->SetChildActorClass(Entry.Part.PartClass);
+
+				// RegisterComponent을 통해 마지막으로 RenderWorld인 FScene에 변경 내용을 전달한다 
 				PartComponent->RegisterComponent();
 
 				if (AActor* SpawnedActor = PartComponent->GetChildActor())
@@ -183,7 +185,7 @@ bool FOWCharacterPartList::SpawnActorForEntry(FOWAppliedCharacterPartEntry& Entr
 						break;
 					}
 
-					// ChildActorComponent가 틱 의존성을 제공하지 않으므로 직접 틱 의존성을 설정합니다.
+					// ChildActorComponent가 틱을 먼저 도는것을 방지하기 위해 직접 틱 의존성을 설정합니다.
 					if (USceneComponent* SpawnedRootComponent = SpawnedActor->GetRootComponent())
 					{
 						SpawnedRootComponent->AddTickPrerequisiteComponent(ComponentToAttachTo);
@@ -286,6 +288,7 @@ TArray<AActor*> UOWPawnComponent_CharacterParts::GetCharacterPartActors() const
 
 USkeletalMeshComponent* UOWPawnComponent_CharacterParts::GetParentMeshComponent() const
 {
+	// 폰이 ACharacter파생이면 이미 메시 컴포넌트가 기본으로 있으니까 GetMesh로 변환
 	if (AActor* OwnerActor = GetOwner())
 	{
 		if (ACharacter* OwningCharacter = Cast<ACharacter>(OwnerActor))
@@ -333,7 +336,6 @@ void UOWPawnComponent_CharacterParts::BroadcastChanged()
 {
 	const bool bReinitPose = true;
 
-	// 바디 타입이 변경되었는지 확인합니다.
 	if (USkeletalMeshComponent* MeshComponent = GetParentMeshComponent())
 	{
 		// 코스메틱 파츠 태그를 기준으로 사용할 메시를 결정합니다.
@@ -345,7 +347,8 @@ void UOWPawnComponent_CharacterParts::BroadcastChanged()
 
 		// 메시의 물리 에셋과 별개로 강제 오버라이드가 있으면 원하는 물리 에셋을 적용합니다.
 		if (UPhysicsAsset* PhysicsAsset = BodyMeshes.ForcedPhysicsAsset)
-		{
+		{	
+			// SetPhysicsAsset은 무거워서 함수 내부에서 bForceReInit이 아니면 중복일때는 수행 안함
 			MeshComponent->SetPhysicsAsset(PhysicsAsset, /*bForceReInit=*/ bReinitPose);
 		}
 	}

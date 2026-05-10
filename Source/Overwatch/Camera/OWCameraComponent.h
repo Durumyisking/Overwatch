@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Camera/OWCameraMode.h"
+#include "GameplayTagContainer.h"
 #include "OWCameraComponent.generated.h"
 
 class UOWCameraModeStack;
@@ -32,6 +33,7 @@ public:
 
 	/** 델리게이트로 선택된 카메라 모드를 스택에 반영한다. */
 	void UpdateCameraModes();
+	void GetBlendInfo(float& OutWeightOfTopLayer, FGameplayTag& OutTagOfTopLayer) const;
 
 	virtual void OnRegister() override;
 	virtual void GetCameraView(float InDeltaTime, FMinimalViewInfo& OutDesiredView) override;

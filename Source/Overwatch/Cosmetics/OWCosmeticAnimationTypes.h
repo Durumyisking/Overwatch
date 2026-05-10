@@ -60,6 +60,7 @@ struct FOWAnimBodyStyleSelectionEntry
 	FGameplayTagContainer RequiredTags;
 };
 
+// 장착된 코스메틱 파츠들의 GameplayTag 조합을 보고 Pawn 본체의 USkeletalMesh를 고르는 규칙 테이블입니다.
 USTRUCT(BlueprintType)
 struct FOWAnimBodyStyleSelectionSet
 {

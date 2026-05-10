@@ -18,6 +18,7 @@ public class Overwatch : ModuleRules
 			"Core", 
 			"CoreUObject", 
 			"Engine", 
+			"PhysicsCore",
 			"InputCore", 
 			"EnhancedInput", 
 			"ModularGameplay",
@@ -36,6 +37,8 @@ public class Overwatch : ModuleRules
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
+
+		SetupIrisSupport(Target);
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

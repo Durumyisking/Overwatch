@@ -66,3 +66,9 @@ void UOWCameraComponent::UpdateCameraModes()
 		}
 	}
 }
+
+void UOWCameraComponent::GetBlendInfo(float& OutWeightOfTopLayer, FGameplayTag& OutTagOfTopLayer) const
+{
+	check(CameraModeStack);
+	CameraModeStack->GetBlendInfo(OutWeightOfTopLayer, OutTagOfTopLayer);
+}

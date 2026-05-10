@@ -262,3 +262,20 @@ void UOWCameraModeStack::BlendStack(FOWCameraModeView& OutCameraModeView) const
 		OutCameraModeView.Blend(CameraMode->View, CameraMode->BlendWeight);
 	}
 }
+
+void UOWCameraModeStack::GetBlendInfo(float& OutWeightOfTopLayer, FGameplayTag& OutTagOfTopLayer) const
+{
+	if (CameraModeStack.IsEmpty())
+	{
+		OutWeightOfTopLayer = 1.0f;
+		OutTagOfTopLayer = FGameplayTag();
+		return;
+	}
+
+	// Lyra와 같이 스택의 최하단 항목이 현재 최종 뷰에 남아 있는 최상위 기여 정보를 제공한다.
+	const UOWCameraMode* TopEntry = CameraModeStack.Last();
+	check(TopEntry);
+
+	OutWeightOfTopLayer = TopEntry->GetBlendWeight();
+	OutTagOfTopLayer = TopEntry->GetCameraTypeTag();
+}
