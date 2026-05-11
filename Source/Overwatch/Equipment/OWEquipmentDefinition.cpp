@@ -7,5 +7,6 @@
 UOWEquipmentDefinition::UOWEquipmentDefinition(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	// 혹시나 없을수도 있으니까..
 	InstanceType = UOWEquipmentInstance::StaticClass();
 }

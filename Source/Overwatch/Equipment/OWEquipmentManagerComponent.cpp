@@ -110,7 +110,7 @@ void FOWEquipmentList::RemoveEntry(UOWEquipmentInstance* Instance)
 
 UOWEquipmentManagerComponent::UOWEquipmentManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, EquipmentList(this)
+	, EquipmentList(this) // Owner설정을 까먹지 말쟈
 {
 	SetIsReplicatedByDefault(true);
 	bWantsInitializeComponent = true;

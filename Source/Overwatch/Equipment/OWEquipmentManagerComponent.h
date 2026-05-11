@@ -37,6 +37,7 @@ private:
 };
 
 /** 장비 목록의 추가/삭제를 항목 단위로 복제하는 FastArray 컨테이너다. */
+// EquipmentInstance의 실제 인스턴스를 Entry에서 관리한다.
 USTRUCT(BlueprintType)
 struct FOWEquipmentList : public FFastArraySerializer
 {
@@ -68,6 +69,7 @@ private:
 private:
 	friend class UOWEquipmentManagerComponent;
 
+	// 장착물에 대한 관리 리스트
 	UPROPERTY()
 	TArray<FOWAppliedEquipmentEntry> Entries;
 

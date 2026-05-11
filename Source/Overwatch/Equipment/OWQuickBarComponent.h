@@ -41,6 +41,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOWQuickBarActiveIndexChanged, const
  * PlayerController가 소유하는 QuickBar 상태다.
  * Controller는 어떤 슬롯을 선택했는지만 소유하고, 실제 장착 상태는 Pawn의 EquipmentManager가 소유한다.
  */
+// 보통 우리가 RPG의 퀵슬롯 생각하면 된다.
+// HUD와 Inventory/Equipment(Gameplay)의 다리 역할을 하는 컴포넌트다.
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
 class OVERWATCH_API UOWQuickBarComponent : public UControllerComponent
 {
@@ -100,16 +102,20 @@ private:
 	void OnRep_ActiveSlotIndex();
 
 protected:
+	// 슬롯 개수
 	UPROPERTY(EditDefaultsOnly, Category = "OW|QuickBar")
 	int32 NumSlots = 3;
 
 private:
+	// 현재 슬롯 상태
 	UPROPERTY(ReplicatedUsing = OnRep_Slots)
 	TArray<TObjectPtr<UOWInventoryItemInstance>> Slots;
 
+	// 현재 활성화된 Slot Index (보통 FPS에서는 1개만 활성화 하니까 int32)
 	UPROPERTY(ReplicatedUsing = OnRep_ActiveSlotIndex)
 	int32 ActiveSlotIndex = INDEX_NONE;
 
+	// 현재 장착한(활성화 한) 장비 인스턴스. 슬롯이 바뀔 때마다 Pawn의 EquipmentManager에서 장착/해제 하면서 업데이트 된다.
 	UPROPERTY()
 	TObjectPtr<UOWEquipmentInstance> EquippedItem;
 };

@@ -7,6 +7,7 @@
 #include "GameFeaturesSubsystem.h"
 #include "GameFeaturesSubsystemSettings.h"
 #include "Net/UnrealNetwork.h"
+#include "OWLog.h"
 
 UOWExperienceManagerComponent::UOWExperienceManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -174,6 +175,10 @@ void UOWExperienceManagerComponent::OnExperienceFullLoadCompleted()
 			Action->OnGameFeatureRegistering();
 			Action->OnGameFeatureLoading();
 			Action->OnGameFeatureActivating(Context);
+
+			OW_LOG(LogOWGame, Log, TEXT("Experience GameFeatureAction activated. Action=%s Class=%s"),
+				*GetNameSafe(Action),
+				*GetNameSafe(Action->GetClass()));
 		}
 	};
 

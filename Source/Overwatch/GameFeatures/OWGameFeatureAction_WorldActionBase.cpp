@@ -3,19 +3,27 @@
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "OWLog.h"
 
 void UOWGameFeatureAction_WorldActionBase::OnGameFeatureActivating(FGameFeatureActivatingContext& Context)
 {
 	GameInstanceStartHandles.FindOrAdd(Context) = FWorldDelegates::OnStartGameInstance.AddUObject(this, &ThisClass::HandleGameInstanceStart, FGameFeatureStateChangeContext(Context));
 
 	// 이미 초기화된 GameInstance와 연결된 모든 World에 Action을 적용한다.
+	int32 AppliedWorldCount = 0;
 	for (const FWorldContext& WorldContext : GEngine->GetWorldContexts())
 	{
 		if (Context.ShouldApplyToWorldContext(WorldContext))
 		{
 			AddToWorld(WorldContext, Context);
+			++AppliedWorldCount;
 		}
 	}
+
+	OW_LOG(LogOWGame, Log, TEXT("GameFeatureAction activated. Action=%s Class=%s AppliedWorlds=%d"),
+		*GetNameSafe(this),
+		*GetNameSafe(GetClass()),
+		AppliedWorldCount);
 }
 
 void UOWGameFeatureAction_WorldActionBase::OnGameFeatureDeactivating(FGameFeatureDeactivatingContext& Context)

@@ -52,9 +52,11 @@ private:
 	UFUNCTION()
 	void OnRep_Instigator();
 
+	// 어떤 InventoryItemInstance에 의해 활성화되었는지 
 	UPROPERTY(ReplicatedUsing = OnRep_Instigator)
 	TObjectPtr<UObject> Instigator;
 
+	// UOWEquipmentDefinition에 의해 Spawn된 Actor들. 장비가 해제될 때 제거한다.
 	UPROPERTY(Replicated)
 	TArray<TObjectPtr<AActor>> SpawnedActors;
 };
